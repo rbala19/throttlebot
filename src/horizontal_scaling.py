@@ -9,7 +9,7 @@ from collections import defaultdict
 import logging
 from workload_manager import *
 import json
-
+import multiprocessing as mp
 
 def create_autoscaler(deployment_name, cpu_percent, min_size, max_size):
 
@@ -276,8 +276,8 @@ def run_utilization_experiment(scale_deployment_name, workload_deployment_name, 
 
         sleep(15)
 
-def run_utilization_experiment_variable_workload(scale_deployment_name, workload_deployment_name, service_name, additional_args, workload_size, num_iterations,
-                               min_scaleout ,max_scaleout, cpu_cost, workload_node_count=4, label="", ab = True):
+def run_utilization_experiment_variable_workload(scale_deployment_list, workload_services_list, workload_deployment_name, workload_size_list, num_iterations,
+                               min_scaleout, max_scaleout, cpu_cost_list, additional_args_dict, node_count=4, label="", ab = True):
 
 
     performance_data_list = []
@@ -292,35 +292,47 @@ def run_utilization_experiment_variable_workload(scale_deployment_name, workload
 
         for utilization in [10, 20, 40, 50]:
 
-            deploying = True
-            while deploying:
-                try:
-                    create_scale_deployment(scale_deployment_name, cpu_cost=cpu_cost)
-                    deploying = False
-                except:
-                    pass
+            for index in range(len(scale_deployment_list)):
+                deploying = True
+                while deploying:
+                    try:
+                        create_scale_deployment(scale_deployment_list[index], cpu_cost=cpu_cost_list[index])
+                        deploying = False
+                    except:
+                        pass
 
-            # wait_for_scale_deployment(scale_deployment_name)
+                wait_for_scale_deployment(scale_deployment_list[index])
 
-            create_workload_deployment(workload_deployment_name, workload_size, service_name, additional_args, node_count=workload_node_count, ab = ab)
+            for index in range(len(scale_deployment_list)):
 
-            sleep(10)
+                for endpoint in additional_args_dict[scale_deployment_list[index]]:
 
-            create_autoscaler(scale_deployment_name, utilization, min_scaleout, max_scaleout)
+                    create_workload_deployment("{}-{}-{}".format(workload_deployment_name, scale_deployment_list[index], endpoint),
+                                               workload_size_list[index],
+                                               scale_deployment_list[index], endpoint, node_count=node_count)
 
-            print("Create autoscaler with utilization {}".format(utilization))
+            sleep(20)
+
+            for index in range(len(scale_deployment_list)):
+                create_autoscaler(scale_deployment_list[index], utilization, min_scaleout, max_scaleout)
+
+            print("Creating autoscalers with utilization {}".format(utilization))
 
             print("Waiting for autoscaler metrics")
 
-            time_of_deployment = wait_for_autoscale_metrics(scale_deployment_name)
+            for index in range(len(scale_deployment_list)):
+                time_of_deployment = wait_for_autoscale_metrics(scale_deployment_list[index])
 
             print("Waiting for Autoscaler steady state")
 
-            performance_data_while_scaling[utilization].append(wait_for_autoscaler_steady_state(scale_deployment_name=scale_deployment_name, workload_deployment_name=workload_deployment_name, flag=False,
-                                             utilization=utilization, ab=ab))
+            process_list = []
+            for index in range(len(scale_deployment_list)):
+                args = [scale_deployment_list[index], "{}-{}".format(workload_deployment_name, scale_deployment_list[index]), False, None, utilization]
+                process_list.append(mp.Process(target = wait_for_autoscaler_steady_state, args = args))
+                process_list[-1].start()
 
-
-
+            for process in process_list:
+                process.join()
             # Collects and writes cost data
             cost_data = calculate_deployment_cost(scale_deployment_name, time_of_deployment)
 
