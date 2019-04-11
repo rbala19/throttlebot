@@ -240,22 +240,28 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
 
             # Collects and writes performance data
-            pods_data = parse_results(workload_deployment_name, num_iterations=num_iterations, ab=ab)
 
-            print("Writing performance data to file")
+            for index in range(len(workload_services_list)):
 
-            with open('performance_results_{}_{}'.format(label, trial), 'w') as file:
-                performance_data_list.append({"data": pods_data, "utilization": utilization})
+                for endpoint in additional_args_dict[workload_services_list[index]]:
 
-                file.write(json.dumps(performance_data_list))
+                    pods_data = parse_results("{}-{}-{}".format(workload_deployment_name, workload_services_list[index], endpoint),
+                                              num_iterations=num_iterations, ab=ab)
+
+
+                    print("Writing performance data to file")
+
+
+                    performance_data_list.append({"data": pods_data, "utilization": utilization})
+
+
+                    with open('performance_results_{}_{}'.format(label, trial), 'w') as file:
+                        performance_data_list.append({"data": pods_data, "utilization": utilization})
+
+                        file.write(json.dumps(performance_data_list))
 
             #################################################################################
 
-            # print("Ensuring workload node count is at least {}".format(node_count - 1))
-
-            # ensure_workload_node_count(node_count)
-
-            # sleep(15)
 
             scale_workload_deployment(workload_deployment_name, workload_size * 6)
 
