@@ -153,17 +153,17 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                                min_scaleout, max_scaleout, cpu_cost_list, additional_args_dict, node_count=4, label="", ab = True):
 
 
-    performance_data_list = []
-    performance_data_list_2 = []
-    cost_data_list = []
-    cost_data_list_2 = []
+    performance_data_list = defaultdict(list)
+    performance_data_list_2 = defaultdict(list)
+    cost_data_list  = defaultdict(list)
+    cost_data_list_2 = defaultdict(list)
 
     performance_data_while_scaling = defaultdict(list)
     performance_data_while_scaling2 = defaultdict(list)
 
-    for trial in range(3):
+    for trial in range(1):
 
-        for utilization in [10, 20, 40, 50]:
+        for utilization in [20]:
 
             for index in range(len(scale_deployment_list)):
                 deploying = True
@@ -234,7 +234,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
                 with open('cost_results_{}_{}_{}'.format(scale_deployment_list[index], label, trial), 'w') as file:
 
-                    cost_data_list.append({"data": cost_data, "utilization": utilization})
+                    cost_data_list[scale_deployment_list[index]].append(({"data": cost_data, "utilization": utilization}))
 
                     file.write(json.dumps(cost_data_list))
 
@@ -252,18 +252,24 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                     print("Writing performance data to file")
 
 
-                    performance_data_list.append({"data": pods_data, "utilization": utilization})
+                    performance_data_list[workload_services_list[index]].append({"data": pods_data,
+                                                                                 "utilization": utilization,
+                                                                                 "endpoint" : endpoint})
 
 
-                    with open('performance_results_{}_{}'.format(label, trial), 'w') as file:
-                        performance_data_list.append({"data": pods_data, "utilization": utilization})
 
-                        file.write(json.dumps(performance_data_list))
+                with open('performance_results_{}_{}_{}'.format(workload_services_list[index], label, trial), 'w') as file:
+
+                    file.write(json.dumps(performance_data_list[workload_services_list[index]]))
 
             #################################################################################
 
+            for index in range(len(workload_services_list)):
 
-            scale_workload_deployment(workload_deployment_name, workload_size * 6)
+                for endpoint in additional_args_dict[workload_services_list[index]]:
+
+                    scale_workload_deployment("{}-{}-{}".format(workload_deployment_name, workload_services_list[index],
+                                                                endpoint), workload_size_list[index] * 6)
 
             sleep(30)
 
@@ -271,49 +277,95 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
             print("Waiting for Autoscaler steady state")
 
-            performance_data_while_scaling2[utilization].append(wait_for_autoscaler_steady_state(scale_deployment_name=scale_deployment_name,
-                                             workload_deployment_name=workload_deployment_name, flag=True,
-                                             utilization=utilization, ab = ab))
+            queue = mp.Queue()
 
+            process_list = []
+            for index in range(len(scale_deployment_list)):
+                if scale_deployment_list[index] in workload_services_list:
+                    args = [scale_deployment_list[index],
+                            "{}-{}".format(workload_deployment_name, scale_deployment_list[index]),
+                            False, None, utilization, queue]
+                else:
+                    args = [scale_deployment_list[index], None, False, None, utilization, queue]
+                process_list.append(mp.Process(target=wait_for_autoscaler_steady_state, args=args))
+                process_list[-1].start()
+
+            for process in process_list:
+                process.join()
             # Collects and writes cost data
-            cost_data = calculate_deployment_cost(scale_deployment_name, timestamp2)
 
-            print("Current Cpu Cost: {}".format(cost_data))
 
-            print("Writing cost data to file 2")
+            scale_name_to_ending_time = {}
+            for process in process_list:
+                queue_result = queue.get()
+                scale_name_to_ending_time[queue_result.keys()[0]] = queue_result.values()[0]
+
+            for index in scale_deployment_list:
+
+
+                cost_data = calculate_deployment_cost(scale_deployment_list[index], times_of_deployment[index],
+                    scale_name_to_ending_time[scale_deployment_list[index]])
+
+
+                print("Current Cpu Cost: {}".format(cost_data))
+
+                print("Writing cost data to file")
+
+                with open('cost_results2_{}_{}_{}'.format(scale_deployment_list[index], label, trial), 'w') as file:
+
+                    cost_data_list_2[scale_deployment_list[index]].append(({"data": cost_data, "utilization": utilization}))
+
+                    file.write(json.dumps(cost_data_list_2))
+
 
             # Collects and writes performance data
-            pods_data = parse_results(workload_deployment_name, num_iterations=num_iterations, ab=ab)
+            for index in range(len(workload_services_list)):
 
-            print("Writing performance data to file 2")
+                for endpoint in additional_args_dict[workload_services_list[index]]:
 
-            with open('performance_results2_{}_{}'.format(label, trial), 'w') as file:
-                performance_data_list_2.append({"data": pods_data, "utilization": utilization})
-
-                file.write(json.dumps(performance_data_list_2))
+                    pods_data = parse_results("{}-{}-{}".format(workload_deployment_name, workload_services_list[index], endpoint),
+                                              num_iterations=num_iterations, ab=ab)
 
 
-            with open('cost_results2_{}_{}'.format(label, trial), 'w') as file:
-                cost_data_list_2.append({"data": cost_data, "utilization": utilization})
-
-                file.write(json.dumps(cost_data_list_2))
+                    print("Writing performance data to file")
 
 
-            file = open('performance_results_while_scaling_{}_{}'.format(utilization, label), 'w')
-            file.write(json.dumps(performance_data_while_scaling[utilization]))
-            file.flush()
-            file.close()
+                    performance_data_list_2[workload_services_list[index]].append({"data": pods_data,
+                                                                                 "utilization": utilization,
+                                                                                 "endpoint" : endpoint})
 
-            file = open('performance_results_while_scaling2_{}_{}'.format(utilization, label), 'w')
-            file.write(json.dumps(performance_data_while_scaling2[utilization]))
-            file.flush()
-            file.close()
 
-            subprocess.Popen(['kubectl', 'delete', 'hpa/{}'.format(scale_name)])
 
-            subprocess.Popen(['kubectl', 'delete', 'deployment', scale_deployment_name])
+                with open('performance_results2_{}_{}_{}'.format(workload_services_list[index], label, trial), 'w') as file:
 
-            subprocess.Popen(['kubectl', 'delete', 'deployment', workload_deployment_name])
+                    file.write(json.dumps(performance_data_list_2[workload_services_list[index]]))
+
+
+
+            # file = open('performance_results_while_scaling_{}_{}'.format(utilization, label), 'w')
+            # file.write(json.dumps(performance_data_while_scaling[utilization]))
+            # file.flush()
+            # file.close()
+            #
+            # file = open('performance_results_while_scaling2_{}_{}'.format(utilization, label), 'w')
+            # file.write(json.dumps(performance_data_while_scaling2[utilization]))
+            # file.flush()
+            # file.close()
+
+            for service in scale_deployment_list:
+
+                subprocess.Popen(['kubectl', 'delete', 'hpa/{}'.format(service)])
+
+                subprocess.Popen(['kubectl', 'delete', 'deployment', service])
+
+
+            for index in range(len(workload_services_list)):
+
+                for endpoint in additional_args_dict[workload_services_list[index]]:
+
+                    subprocess.Popen(['kubectl', 'delete', 'deployment', "{}-{}-{}"
+                                     .format(workload_deployment_name, workload_services_list[index], endpoint)])
+
 
             sleep(25)
 
