@@ -63,7 +63,7 @@ def calculate_pod_cost(pod_name, cpu_quota, starting_time):
 
     return cost * cpu_quota
 
-def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_name, flag=None, selector=None, utilization = None, ab = True):
+def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_name=None, flag=None, selector=None, utilization = None, ab = True):
 
 
     label_all_unlabeled_nodes_as_service()
@@ -92,8 +92,11 @@ def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_
             pod_count_every_30_sec.append(current_pod_count)
             # print(calculate_deployment_cost(scale_deployment_name, int(time.time())))
             if (count % 60 == 0):
-                performance_data.append({"pods_count": current_pod_count,
-                                        "data": parse_results(workload_deployment_name, num_iterations=1, ab=ab)})
+                dct_to_add = {}
+                dct_to_add["pods_count"] = current_pod_count
+                if workload_name:
+                    dct_to_add["data"] = parse_results(workload_deployment_name, num_iterations=1, ab=ab)
+                performance_data.append(dct_to_add)
 
 
         sleep(1)
@@ -119,17 +122,12 @@ def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_
 
                 dict_to_add = {}
 
-                dict_to_add["data"] = parse_results(workload_deployment_name, num_iterations=1, ab=ab)
-
-                # print("Done parsing results")
+                if workload_name:
+                    dict_to_add["data"] = parse_results(workload_deployment_name, num_iterations=1, ab=ab)
 
                 dict_to_add["pods_count"] = len(get_all_pods_from_deployment(scale_deployment_name, safe=True))
 
-                # print("Pod count is {}".format(dict_to_add["pods_count"]))
-
                 performance_data.append(dict_to_add)
-
-
 
                 pod_count_every_30_sec.append(dict_to_add['pods_count'])
 
@@ -146,135 +144,11 @@ def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_
             print(e.args)
             print(e.message)
 
+def wait_for_steady_state_and_calculate_cost(scale_deployment_name, workload_deployment_name, flag=None, selector=None,
+                                             utilization, ab = True, ):
+    wait_for_autoscaler_steady_state()
+    calculate_deployment_cost()
 
-
-
-def run_workload_experiment(deployment_name, num_iterations, max_workload_size, service_name):
-
-    #Creates initial workload deployment
-    create_workload_deployment(deployment_name, 1, service_name)
-
-    time_of_deployment = wait_for_pods_to_be_deployed(deployment_name, 1)
-
-    #Collects and writes performance data
-    pods_data = parse_results(deployment_name, num_iterations)
-
-    with open('performance_results', 'w') as file:
-
-        pods_data = [{"data": pods_data, "workload_size": 1}]
-
-        file.write(json.dumps(pods_data))
-
-
-    #Collects and writes cost data
-    cost_data = calculate_deployment_cost(deployment_name, time_of_deployment)
-
-    print("Current Cpu Cost: {}".format(cost_data))
-
-    with open('cost_results', 'w') as file:
-
-        cost_data = [{"data": cost_data, "workload_size": 1}]
-
-        file.write(json.dumps(cost_data))
-
-
-    for workload_size in range(2, max_workload_size):
-
-        #Scales Workload Deployment
-        scale_workload_deployment(deployment_name, workload_size)
-
-        print("Scaled deployment to size {}".format(workload_size))
-
-        time_of_deployment = wait_for_pods_to_be_deployed(deployment_name, workload_size)
-
-        #Collects and writes performance data
-        pods_data = parse_results(deployment_name, num_iterations)
-
-        with open('performance_results', 'w') as file:
-
-            pods_data.append({"data": pods_data, "workload_size": workload_size})
-
-            file.write(json.dumps(pods_data))
-
-        wait_for_autoscaler_steady_state(deployment_name)
-
-        # Collects and writes cost data
-        cost_data = calculate_deployment_cost(deployment_name, time_of_deployment)
-
-        print("Current Cpu Cost: {}".format(cost_data))
-
-        with open('cost_results', 'w') as file:
-
-            cost_data.append({"data": cost_data, "workload_size": workload_size})
-
-            file.write(json.dumps(cost_data))
-
-def run_utilization_experiment(scale_deployment_name, workload_deployment_name, service_name, additional_args, workload_size, num_iterations,
-                               min_scaleout ,max_scaleout):
-
-
-    performance_data_list = []
-    cost_data_list = []
-
-
-    for utilization in [20]:
-
-        subprocess.Popen(['kubectl', 'create', '-f', 'manifests/{}.yaml'.format(scale_deployment_name)])
-
-        create_workload_deployment(workload_deployment_name, workload_size, service_name, additional_args, ab = False)
-
-        sleep(10)
-
-        create_autoscaler(scale_deployment_name, utilization, min_scaleout, max_scaleout)
-
-        print("Create autoscaler with utilization {}".format(utilization))
-
-        print("Waiting for autoscaler metrics")
-
-        time_of_deployment = wait_for_autoscale_metrics(scale_deployment_name)
-
-        print("Waiting for Autoscaler steady state")
-
-        wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_name)
-
-        #Collects and writes performance data
-        pods_data = parse_results(workload_deployment_name, num_iterations)
-
-        print("Writing performance data to file")
-
-        with open('performance_results_{}', 'w') as file:
-
-            performance_data_list.append({"data": pods_data, "utilization": utilization})
-
-            file.write(json.dumps(performance_data_list))
-
-        # Collects and writes cost data
-        cost_data = calculate_deployment_cost(scale_deployment_name, time_of_deployment)
-
-        print("Current Cpu Cost: {}".format(cost_data))
-
-        print("Writing cost data to file")
-
-        with open('cost_results', 'w') as file:
-
-            cost_data_list.append({"data": cost_data, "utilization": utilization})
-
-            file.write(json.dumps(cost_data_list))
-
-        with open('performance_results_while_scaling_{}'.format(utilization), 'w') as file:
-            file.flush()
-
-        with open('performance_results_while_scaling2_{}'.format(utilization), 'w') as file:
-            file.flush()
-
-
-        subprocess.Popen(['kubectl', 'delete', 'hpa/{}'.format(scale_name)])
-
-        subprocess.Popen(['kubectl', 'delete', 'deployment', scale_deployment_name])
-
-        subprocess.Popen(['kubectl', 'delete', 'deployment', workload_deployment_name])
-
-        sleep(15)
 
 def run_utilization_experiment_variable_workload(scale_deployment_list, workload_services_list, workload_deployment_name, workload_size_list, num_iterations,
                                min_scaleout, max_scaleout, cpu_cost_list, additional_args_dict, node_count=4, label="", ab = True):
@@ -303,13 +177,13 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
                 wait_for_scale_deployment(scale_deployment_list[index])
 
-            for index in range(len(scale_deployment_list)):
+            for index in range(len(workload_services_list)):
 
-                for endpoint in additional_args_dict[scale_deployment_list[index]]:
+                for endpoint in additional_args_dict[workload_services_list[index]]:
 
-                    create_workload_deployment("{}-{}-{}".format(workload_deployment_name, scale_deployment_list[index], endpoint),
+                    create_workload_deployment("{}-{}-{}".format(workload_deployment_name, workload_services_list[index], endpoint),
                                                workload_size_list[index],
-                                               scale_deployment_list[index], endpoint, node_count=node_count)
+                                               workload_services_list[index], endpoint, node_count=node_count)
 
             sleep(20)
 
@@ -320,21 +194,30 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
             print("Waiting for autoscaler metrics")
 
+            times_of_deployment = []
             for index in range(len(scale_deployment_list)):
-                time_of_deployment = wait_for_autoscale_metrics(scale_deployment_list[index])
+                times_of_deployment.append(wait_for_autoscale_metrics(scale_deployment_list[index]))
 
             print("Waiting for Autoscaler steady state")
 
             process_list = []
             for index in range(len(scale_deployment_list)):
-                args = [scale_deployment_list[index], "{}-{}".format(workload_deployment_name, scale_deployment_list[index]), False, None, utilization]
+                if scale_deployment_list[index] in workload_services_list:
+                    args = [scale_deployment_list[index], "{}-{}".format(workload_deployment_name, scale_deployment_list[index]), False, None, utilization]
+                else:
+                    args = [scale_deployment_list[index], None, False, None, utilization]
                 process_list.append(mp.Process(target = wait_for_autoscaler_steady_state, args = args))
                 process_list[-1].start()
 
             for process in process_list:
                 process.join()
             # Collects and writes cost data
-            cost_data = calculate_deployment_cost(scale_deployment_name, time_of_deployment)
+
+
+            cost_data_list = []
+            for index in scale_deployment_list:
+                cost_data_list.append(calculate_deployment_cost(scale_deployment_list[index], times_of_deployment[index]))
+
 
             print("Current Cpu Cost: {}".format(cost_data))
 
