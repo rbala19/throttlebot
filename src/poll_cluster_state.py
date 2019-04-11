@@ -322,6 +322,8 @@ def create_and_deploy_workload_deployment(name, replicas, num_requests, concurre
     for i in range(node_count + 1, len(nodes)):
         output = subprocess.check_output("kubectl label nodes {} nodetype=service".format(nodes[i]), shell=True)
 
+    label_all_unlabeled_nodes_as_service()
+
     v1_beta.create_namespaced_deployment(body=body, namespace='default')
 
 def label_all_unlabeled_nodes_as_service():
@@ -402,7 +404,7 @@ def populate_workload_args(num_requests, concurrency, hostname, port, thread_cou
 
     if ab:
         args = ["-c",
-                'while true; do ab -r -n {} -c {} -p post.json -T application/json -s 200 -q http://{}:{}/{}/; sleep 1; done;'.format(
+                'while true; do ab -r -n {} -c {} -p post.json -T application/json -s 200 -q http://{}:{}/{}/; done;'.format(
                     num_requests, concurrency, hostname, port, additional_args
                 )]
     else:

@@ -19,7 +19,7 @@ def create_autoscaler(deployment_name, cpu_percent, min_size, max_size):
                                                                                                     max_size),
                             shell=True)
 
-def calculate_deployment_cost(deployment_name, starting_time):
+def calculate_deployment_cost(deployment_name, starting_time, ending_time = None):
 
     # cmd = "cat ~/go/data | grep \'" + deployment_name + "\'  | awk {\'print $2\'}"
     # output = (subprocess.check_output(cmd, shell=True)).decode('utf-8')
@@ -35,13 +35,13 @@ def calculate_deployment_cost(deployment_name, starting_time):
     pods = [str(pod) for pod in pods]
 
     for pod in pods:
-        pod_data[pod] = calculate_pod_cost(pod, cpu_quota, starting_time)
+        pod_data[pod] = calculate_pod_cost(pod, cpu_quota, starting_time, ending_time)
 
     total_cost = sum(pod_data.values())
 
     return total_cost
 
-def calculate_pod_cost(pod_name, cpu_quota, starting_time):
+def calculate_pod_cost(pod_name, cpu_quota, starting_time, ending_time):
     cmd = "cat ~/go/data | grep \'{}\'".format(pod_name)
     output = (subprocess.check_output(cmd, shell=True)).decode('utf-8')
     output = output.split('\n')[:-1]
@@ -56,20 +56,24 @@ def calculate_pod_cost(pod_name, cpu_quota, starting_time):
 
         cost = int(output[1].split(" ")[2]) - starting_time
     else:
+
+        if not ending_time:
+            ending_time = int(time.time())
+
         if output[0].split(" ")[0] == "Add" and int(output[0].split(" ")[2]) > starting_time:
-            cost = int(time.time()) - int(output[0].split(" ")[2])
+            cost = ending_time - int(output[0].split(" ")[2])
         else:
-            cost = int(time.time()) - starting_time
+            cost = ending_time - starting_time
 
     return cost * cpu_quota
 
-def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_name=None, flag=None, selector=None, utilization = None, ab = True):
+def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_name=None, flag=None, selector=None,
+                                     utilization = None, ab = True, return_queue = None):
 
 
     label_all_unlabeled_nodes_as_service()
 
     performance_data = []
-
 
     label = selector
     if not selector:
@@ -80,23 +84,23 @@ def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_
     count = 0
     while count < 180:
 
-        if (count % 12 == 0):
-            label_all_unlabeled_nodes_as_service()
-            # print("done parsing results")
-
-
+        # if (count % 12 == 0):
+        #     label_all_unlabeled_nodes_as_service()
+        #     # print("done parsing results")
+        #
+        #
         if (count % 30 == 0):
-
+        #
             current_pod_count = len(get_all_pods_from_deployment(deployment_name=scale_deployment_name, safe=True))
-            # print("Current pod count is {}".format(current_pod_count))
+        #     # print("Current pod count is {}".format(current_pod_count))
             pod_count_every_30_sec.append(current_pod_count)
-            # print(calculate_deployment_cost(scale_deployment_name, int(time.time())))
-            if (count % 60 == 0):
-                dct_to_add = {}
-                dct_to_add["pods_count"] = current_pod_count
-                if workload_name:
-                    dct_to_add["data"] = parse_results(workload_deployment_name, num_iterations=1, ab=ab)
-                performance_data.append(dct_to_add)
+        #     # print(calculate_deployment_cost(scale_deployment_name, int(time.time())))
+        #     if (count % 60 == 0):
+        #         dct_to_add = {}
+        #         dct_to_add["pods_count"] = current_pod_count
+        #         if workload_name:
+        #             dct_to_add["data"] = parse_results(workload_deployment_name, num_iterations=1, ab=ab)
+        #         performance_data.append(dct_to_add)
 
 
         sleep(1)
@@ -110,25 +114,25 @@ def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_
         try:
 
             pod_count = len(get_all_pods_from_deployment(deployment_name=scale_deployment_name, safe=True))
-
+            #
             if pod_count_every_30_sec[-6] == pod_count:
                 print("Found Steady state")
-                return performance_data
-
-            if (count % 12 == 0):
-                label_all_unlabeled_nodes_as_service()
-
+                return_queue.put({scale_deployment_name: int(time.time())})
+            #
+            # if (count % 12 == 0):
+            #     label_all_unlabeled_nodes_as_service()
+            #
             if count % 30 == 0:
-
+            #
                 dict_to_add = {}
-
-                if workload_name:
-                    dict_to_add["data"] = parse_results(workload_deployment_name, num_iterations=1, ab=ab)
-
+            #
+            #     if workload_name:
+            #         dict_to_add["data"] = parse_results(workload_deployment_name, num_iterations=1, ab=ab)
+            #
                 dict_to_add["pods_count"] = len(get_all_pods_from_deployment(scale_deployment_name, safe=True))
-
-                performance_data.append(dict_to_add)
-
+            #
+            #     performance_data.append(dict_to_add)
+            #
                 pod_count_every_30_sec.append(dict_to_add['pods_count'])
 
                 print(pod_count_every_30_sec)
@@ -143,11 +147,6 @@ def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_
         except Exception as e:
             print(e.args)
             print(e.message)
-
-def wait_for_steady_state_and_calculate_cost(scale_deployment_name, workload_deployment_name, flag=None, selector=None,
-                                             utilization, ab = True, ):
-    wait_for_autoscaler_steady_state()
-    calculate_deployment_cost()
 
 
 def run_utilization_experiment_variable_workload(scale_deployment_list, workload_services_list, workload_deployment_name, workload_size_list, num_iterations,
@@ -200,12 +199,15 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
             print("Waiting for Autoscaler steady state")
 
+            queue = mp.Queue()
+
             process_list = []
             for index in range(len(scale_deployment_list)):
                 if scale_deployment_list[index] in workload_services_list:
-                    args = [scale_deployment_list[index], "{}-{}".format(workload_deployment_name, scale_deployment_list[index]), False, None, utilization]
+                    args = [scale_deployment_list[index], "{}-{}".format(workload_deployment_name, scale_deployment_list[index]),
+                            False, None, utilization, queue]
                 else:
-                    args = [scale_deployment_list[index], None, False, None, utilization]
+                    args = [scale_deployment_list[index], None, False, None, utilization, queue]
                 process_list.append(mp.Process(target = wait_for_autoscaler_steady_state, args = args))
                 process_list[-1].start()
 
@@ -214,20 +216,27 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
             # Collects and writes cost data
 
 
-            cost_data_list = []
+            scale_name_to_ending_time = {}
+            for process in process_list:
+                queue_result = queue.get()
+                scale_name_to_ending_time[queue_result.keys()[0]] = queue_result.values()[0]
+
             for index in scale_deployment_list:
-                cost_data_list.append(calculate_deployment_cost(scale_deployment_list[index], times_of_deployment[index]))
 
 
-            print("Current Cpu Cost: {}".format(cost_data))
+                cost_data = calculate_deployment_cost(scale_deployment_list[index], times_of_deployment[index],
+                    scale_name_to_ending_time[scale_deployment_list[index]])
 
-            print("Writing cost data to file")
 
-            with open('cost_results_{}_{}'.format(label, trial), 'w') as file:
+                print("Current Cpu Cost: {}".format(cost_data))
 
-                cost_data_list.append({"data": cost_data, "utilization": utilization})
+                print("Writing cost data to file")
 
-                file.write(json.dumps(cost_data_list))
+                with open('cost_results_{}_{}_{}'.format(scale_deployment_list[index], label, trial), 'w') as file:
+
+                    cost_data_list.append({"data": cost_data, "utilization": utilization})
+
+                    file.write(json.dumps(cost_data_list))
 
 
             # Collects and writes performance data
