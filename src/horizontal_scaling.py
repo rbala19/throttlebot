@@ -399,7 +399,11 @@ if __name__ == "__main__":
 
     workload_services_list = ["node-app"]
 
-    endpoints = {}
+    endpoints = defaultdict(list)
+
+    endpoints["node-app"].extend([''])
+
+
 
     service_name = "node-app"
 
@@ -414,6 +418,7 @@ if __name__ == "__main__":
     cpu_quota = None
 
     delete = False
+    for scale_name in scale
     try:
         subprocess.Popen(['kubectl', 'delete', 'deployment', scale_name])
         delete = True
