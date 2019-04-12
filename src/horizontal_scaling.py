@@ -393,9 +393,13 @@ def wait_for_autoscale_metrics(deployment_name):
 
 if __name__ == "__main__":
 
-    scale_name = "node-app"
+    scale_deployment_list = ["node-app"]
 
     workload_name = "workload-manager"
+
+    workload_services_list = ["node-app"]
+
+    endpoints = {}
 
     service_name = "node-app"
 
