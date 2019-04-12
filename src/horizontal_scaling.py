@@ -148,6 +148,14 @@ def wait_for_autoscaler_steady_state(scale_deployment_name, workload_deployment_
             print(e.args)
             print(e.message)
 
+def generate_workload_name(workload_prefix, service_name, endpoint):
+    str_to_return = "{}-{}".format(workload_prefix, service_name)
+
+    if endpoint:
+        str_to_return += "-{}".format(endpoint)
+
+    return str_to_return
+
 
 def run_utilization_experiment_variable_workload(scale_deployment_list, workload_services_list, workload_deployment_name, workload_size_list, num_iterations,
                                min_scaleout, max_scaleout, cpu_cost_list, additional_args_dict, node_count=4, label="", ab = True):
@@ -180,7 +188,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
                 for endpoint in additional_args_dict[workload_services_list[index]]:
 
-                    create_workload_deployment("{}-{}-{}".format(workload_deployment_name, workload_services_list[index], endpoint),
+                    create_workload_deployment(generate_workload_name(workload_deployment_name, workload_services_list[index], endpoint),
                                                workload_size_list[index],
                                                workload_services_list[index], endpoint, node_count=node_count)
 
@@ -204,8 +212,9 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
             process_list = []
             for index in range(len(scale_deployment_list)):
                 if scale_deployment_list[index] in workload_services_list:
-                    args = [scale_deployment_list[index], "{}-{}".format(workload_deployment_name, scale_deployment_list[index]),
-                            False, None, utilization, queue]
+                    for endpoint in additional_args_dict[scale_deployment_list[index]]:
+                        args = [scale_deployment_list[index], None
+                                False, None, utilization, queue]
                 else:
                     args = [scale_deployment_list[index], None, False, None, utilization, queue]
                 process_list.append(mp.Process(target = wait_for_autoscaler_steady_state, args = args))
@@ -394,48 +403,42 @@ def wait_for_autoscale_metrics(deployment_name):
 if __name__ == "__main__":
 
     scale_deployment_list = ["node-app"]
-
-    workload_name = "workload-manager"
-
+    pods_per_nodes_list = [4.4]
     workload_services_list = ["node-app"]
 
-    endpoints = defaultdict(list)
+    additional_args_dict = defaultdict(list)
+    additional_args_dict["node-app"].extend([''])
 
-    endpoints["node-app"].extend([''])
-
-
-
+    workload_name = "workload-manager"
+    workload_size_list = [3]
     service_name = "node-app"
-
-    additional_args = ""
-
     nodes_capacity = get_node_capacity()
-
-
-
-    pods_per_node = 4.4
-
+    num_iterations = 20
+    min_scaleout = 10
     cpu_quota = None
+    workload_node_count = 9
+    ab = True
+
 
     delete = False
-    for scale_name in scale
-    try:
-        subprocess.Popen(['kubectl', 'delete', 'deployment', scale_name])
-        delete = True
-    except:
-        pass
+    for scale_name in scale_deployment_list:
+        try:
+            subprocess.Popen(['kubectl', 'delete', 'deployment', scale_name])
+            subprocess.Popen(['kubectl', 'delete', 'hpa/{}'.format(scale_name)])
+            delete = True
+        except:
+            pass
 
-    try:
-        subprocess.Popen(['kubectl', 'delete', 'deployment', workload_name])
-        delete = True
-    except:
-        pass
+    for index in range(len(workload_services_list)):
 
-    try:
-        subprocess.Popen(['kubectl', 'delete', 'hpa/{}'.format(scale_name)])
-        delete = True
-    except:
-        pass
+        for endpoint in additional_args_dict[workload_services_list[index]]:
+
+            try:
+                subprocess.Popen(['kubectl', 'delete', 'deployment', "{}-{}-{}"
+                             .format(workload_name, workload_services_list[index], endpoint)])
+            except:
+                pass
+
 
     if delete:
         sleep(20)
