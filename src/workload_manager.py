@@ -37,44 +37,9 @@ def scale_workload_deployment(name, workload_size):
     subprocess.check_output("kubectl scale deployment {} --replicas={}".format(name, workload_size), shell=True)
 
 
-def schedule_workload_change(deployment_name, num_iterations, max_workload_size, service_name):
+def parse_results(deployment_name, num_iterations, namespace, ab = True):
 
-
-    create_workload_deployment(deployment_name, 1, service_name)
-
-    wait_for_pods_to_be_deployed(deployment_name, 1)
-
-    parse_results(deployment_name, num_iterations)
-
-    for workload_size in range(2, max_workload_size):
-
-        scale_workload_deployment(deployment_name, workload_size)
-
-        print("Scaled deployment to size {}".format(workload_size))
-
-        wait_for_pods_to_be_deployed(deployment_name, workload_size)
-
-        parse_results(deployment_name, num_iterations)
-
-
-def wait_for_pods_to_be_deployed(deployment_name, pod_count):
-    pods = get_all_pods_from_deployment(deployment_name)
-
-
-    timeout = time.time() + 20
-    while len(pods) != pod_count:
-
-        if time.time() > timeout:
-            raise Exception("Deployment Scaling timed out")
-
-        pods = get_all_pods_from_deployment(deployment_name)
-    return int(time.time())
-
-
-
-def parse_results(deployment_name, num_iterations, offline=False, ab = True):
-
-    all_pod_names = get_all_pods_from_deployment(deployment_name=deployment_name, safe=True)
+    all_pod_names = get_all_pods_from_deployment(deployment_name=deployment_name, safe=True, namespace=namespace)
 
     pods_data = []
 

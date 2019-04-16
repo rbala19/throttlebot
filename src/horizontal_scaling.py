@@ -19,18 +19,13 @@ def create_autoscaler(deployment_name, cpu_percent, min_size, max_size):
                                                                                                     max_size),
                             shell=True)
 
-def calculate_deployment_cost(deployment_name, starting_time, ending_time = None):
-
-    # cmd = "cat ~/go/data | grep \'" + deployment_name + "\'  | awk {\'print $2\'}"
-    # output = (subprocess.check_output(cmd, shell=True)).decode('utf-8')
-    # output = output.split('\n')[:-1]
-    # pods = list(set(output))
+def calculate_deployment_cost(deployment_name, starting_time, namespace, ending_time = None):
 
     pod_data = {}
 
     cpu_quota = get_deployment_cpu_quota(deployment_name)
 
-    pods = get_all_pods_from_deployment(deployment_name=deployment_name, safe=True)
+    pods = get_all_pods_from_deployment(deployment_name=deployment_name, safe=True, namespace=namespace)
 
     pods = [str(pod) for pod in pods]
 
@@ -67,7 +62,7 @@ def calculate_pod_cost(pod_name, cpu_quota, starting_time, ending_time):
 
     return cost * cpu_quota
 
-def wait_for_autoscaler_steady_state(scale_deployment_name, return_queue = None):
+def wait_for_autoscaler_steady_state(scale_deployment_name, namespace, return_queue = None):
 
 
     label_all_unlabeled_nodes_as_service()
@@ -80,7 +75,9 @@ def wait_for_autoscaler_steady_state(scale_deployment_name, return_queue = None)
 
         if (count % 30 == 0):
 
-            pod_count_every_30_sec.append(len(get_all_pods_from_deployment(deployment_name=scale_deployment_name, safe=True)))
+            pod_count_every_30_sec.append(len(get_all_pods_from_deployment(deployment_name=scale_deployment_name, safe=True,
+                                                                           namespace=namespace)))
+            print("{}: {}".format(scale_deployment_name, pod_count_every_30_sec))
 
         sleep(1)
         count += 1
@@ -91,17 +88,18 @@ def wait_for_autoscaler_steady_state(scale_deployment_name, return_queue = None)
 
         try:
 
-            pod_count = len(get_all_pods_from_deployment(deployment_name=scale_deployment_name, safe=True))
+            pod_count = len(get_all_pods_from_deployment(deployment_name=scale_deployment_name, safe=True, namespace=namespace))
 
             if pod_count_every_30_sec[-6] == pod_count:
                 print("Found Steady state")
                 return_queue.put({scale_deployment_name: int(time.time())})
+                return
 
             if count % 30 == 0:
 
-                pod_count_every_30_sec.append(len(get_all_pods_from_deployment(scale_deployment_name, safe=True)))
+                pod_count_every_30_sec.append(len(get_all_pods_from_deployment(scale_deployment_name, safe=True, namespace=namespace)))
 
-                print(pod_count_every_30_sec)
+                print("{}: {}".format(scale_deployment_name, pod_count_every_30_sec))
 
 
             sleep(1)
@@ -117,13 +115,16 @@ def generate_workload_name(workload_prefix, service_name, endpoint):
     str_to_return = "{}-{}".format(workload_prefix, service_name)
 
     if endpoint:
+        endpoint.replace("/", "-")
         str_to_return += "-{}".format(endpoint)
 
     return str_to_return
 
 
-def run_utilization_experiment_variable_workload(scale_deployment_list, workload_services_list, workload_deployment_name, workload_size_list, num_iterations,
-                               min_scaleout, max_scaleout, cpu_cost_list, additional_args_dict, workload_node_count=4, label="", ab = True):
+def run_utilization_experiment_variable_workload(scale_deployment_list, workload_services_list, workload_deployment_name, workload_size_list,
+                                                 increased_workload_size_list, num_iterations,
+                               min_scaleout, max_scaleout, cpu_cost_list, additional_args_dict, workload_node_count=4, label="", ab = True,
+                                                 namespace="default"):
 
 
     performance_data_list = defaultdict(list)
@@ -160,7 +161,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                                                workload_size_list[index],
                                                workload_services_list[index], endpoint, node_count=workload_node_count)
 
-            sleep(20)
+            sleep(10)
 
             #Create autoscaler for all scale deployments
 
@@ -184,7 +185,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
             process_list = []
             for index in range(len(scale_deployment_list)):
-                args = [scale_deployment_list[index], queue]
+                args = [scale_deployment_list[index], namespace, queue]
 
                 process_list.append(mp.Process(target=wait_for_autoscaler_steady_state, args=args))
                 process_list[-1].start()
@@ -204,8 +205,10 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
             for index in scale_deployment_list:
 
 
-                cost_data = calculate_deployment_cost(scale_deployment_list[index], times_of_deployment[index],
-                    scale_name_to_ending_time[scale_deployment_list[index]])
+                cost_data = calculate_deployment_cost(deployment_name=scale_deployment_list[index],
+                                                      starting_time=times_of_deployment[index],
+                                                      namespace=namespace,
+                    ending_time=scale_name_to_ending_time[scale_deployment_list[index]])
 
 
                 print("Current Cpu Cost: {}".format(cost_data))
@@ -216,7 +219,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
                     cost_data_list[scale_deployment_list[index]].append(({"data": cost_data, "utilization": utilization}))
 
-                    file.write(json.dumps(cost_data_list))
+                    file.write(json.dumps(cost_data_list[scale_deployment_list[index]]))
 
 
             # Collects and writes performance data
@@ -226,7 +229,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                 for endpoint in additional_args_dict[workload_services_list[index]]:
 
                     pods_data = parse_results(generate_workload_name(workload_deployment_name, workload_services_list[index], endpoint),
-                                              num_iterations=num_iterations, ab=ab)
+                                              num_iterations=num_iterations, ab=ab, namespace=namespace)
 
 
                     print("Writing performance data to file")
@@ -249,7 +252,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                 for endpoint in additional_args_dict[workload_services_list[index]]:
 
                     scale_workload_deployment(generate_workload_name(workload_deployment_name, workload_services_list[index],
-                                                                endpoint), workload_size_list[index] * 6)
+                                                                endpoint), increased_workload_size_list[index])
 
             sleep(30)
 
@@ -262,7 +265,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
             process_list = []
             for index in range(len(scale_deployment_list)):
 
-                args = [scale_deployment_list[index], queue]
+                args = [scale_deployment_list[index], namespace, queue]
 
                 process_list.append(mp.Process(target=wait_for_autoscaler_steady_state, args=args))
                 process_list[-1].start()
@@ -277,11 +280,13 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                 queue_result = queue.get()
                 scale_name_to_ending_time[queue_result.keys()[0]] = queue_result.values()[0]
 
-            for index in scale_deployment_list:
+            for index in range(len(scale_deployment_list)):
 
 
-                cost_data = calculate_deployment_cost(scale_deployment_list[index], times_of_deployment[index],
-                    scale_name_to_ending_time[scale_deployment_list[index]])
+                cost_data = calculate_deployment_cost(deployment_name=scale_deployment_list[index],
+                                                      starting_time=timestamp2,
+                                                      namespace=namespace,
+                    ending_time=scale_name_to_ending_time[scale_deployment_list[index]])
 
 
                 print("Current Cpu Cost: {}".format(cost_data))
@@ -292,7 +297,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
                     cost_data_list_2[scale_deployment_list[index]].append(({"data": cost_data, "utilization": utilization}))
 
-                    file.write(json.dumps(cost_data_list_2))
+                    file.write(json.dumps(cost_data_list_2[scale_deployment_list[index]]))
 
 
             # Collects and writes performance data
@@ -301,7 +306,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                 for endpoint in additional_args_dict[workload_services_list[index]]:
 
                     pods_data = parse_results(generate_workload_name(workload_deployment_name, workload_services_list[index], endpoint),
-                                              num_iterations=num_iterations, ab=ab)
+                                              num_iterations=num_iterations, ab=ab, namespace=namespace)
 
 
                     print("Writing performance data to file")
@@ -318,28 +323,14 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                     file.write(json.dumps(performance_data_list_2[workload_services_list[index]]))
 
 
-            for service in scale_deployment_list:
+            delete_all_deployments(scale_deployment_list, workload_services_list, additional_args_dict)
 
-                subprocess.Popen(['kubectl', 'delete', 'hpa/{}'.format(service)])
-
-                subprocess.Popen(['kubectl', 'delete', 'deployment', service])
-
-
-            for index in range(len(workload_services_list)):
-
-                for endpoint in additional_args_dict[workload_services_list[index]]:
-
-                    subprocess.Popen(['kubectl', 'delete', 'deployment', generate_workload_name(
-                        workload_deployment_name, workload_services_list[index], endpoint)])
-
-
-            sleep(25)
-
-def wait_for_scale_deployment(deployment_name):
+def wait_for_scale_deployment(deployment_name, namespace="default"):
 
     ready = False
     while not ready:
-        output = subprocess.check_output("kubectl get pods | grep \'" + deployment_name + "\' | awk {\'print $3\'}", shell=True) \
+        output = subprocess.check_output("kubectl get pods --namespace=" + namespace +
+                                         "| grep \'" + deployment_name + "\' | awk {\'print $3\'}", shell=True) \
             .decode('utf-8').split("\n")[0]
         if output == "Running":
             ready = True
@@ -355,29 +346,7 @@ def wait_for_autoscale_metrics(deployment_name):
     except:
         return int(time.time())
 
-
-
-if __name__ == "__main__":
-
-    scale_deployment_list = ["node-app"]
-    pods_per_nodes_list = [4.4]
-    workload_services_list = ["node-app"]
-
-    additional_args_dict = defaultdict(list)
-    additional_args_dict["node-app"].extend([''])
-
-    workload_name = "workload-manager"
-    workload_size_list = [3]
-    service_name = "node-app"
-    nodes_capacity = get_node_capacity()
-    num_iterations = 20
-    min_scaleout = 10
-    max_scaleout = 500
-    cpu_quota = None
-    workload_node_count = 9
-    ab = True
-
-
+def delete_all_deployments(scale_deployment_list, workload_services_list, additional_args_dict):
     delete = False
     for scale_name in scale_deployment_list:
         try:
@@ -394,23 +363,50 @@ if __name__ == "__main__":
             try:
                 subprocess.Popen(['kubectl', 'delete', 'deployment', generate_workload_name(
                     workload_name, workload_services_list[index], endpoint)])
+                delete = True
             except:
                 pass
 
-
     if delete:
         sleep(20)
+
+if __name__ == "__main__":
+
+    scale_deployment_list = ["apartmentapp", "elasticsearch", "kibana"]
+    pods_per_nodes_list = [4.4, 4.4, 4.4]
+    workload_services_list = ["apartmentapp"]
+
+    additional_args_dict = defaultdict(list)
+    additional_args_dict["apartmentapp"].extend(['app/psql/users', 'app/mysql/users', 'app/users', 'app/elastic/users/3'])
+
+    workload_name = "workload-manager"
+    workload_size_list = [2]
+    increased_workload_size_list = [10]
+
+    nodes_capacity = get_node_capacity()
+    num_iterations = 20
+    min_scaleout = 10
+    max_scaleout = 500
+    cpu_quota = None
+    workload_node_count = 22
+    ab = True
+    namespace="default"
+
+
+    delete_all_deployments(scale_deployment_list, workload_services_list, additional_args_dict)
 
     run_utilization_experiment_variable_workload(scale_deployment_list=scale_deployment_list,
                                                  workload_deployment_name=workload_name,
                                                  workload_services_list=workload_services_list,
                                                  additional_args_dict=additional_args_dict,
                                                  workload_size_list=workload_size_list,
+                                                 increased_workload_size_list=increased_workload_size_list,
                                                  num_iterations=num_iterations,
                                                  min_scaleout=min_scaleout,
                                                  max_scaleout=max_scaleout,
                                                  cpu_cost_list=[str(get_node_capacity() / float(pods_per_node)) for pods_per_node in pods_per_nodes_list],
                                                  label="{}podsPerNode".format(pods_per_nodes_list[0]),
-                                                 workload_node_count=9,
-                                                 ab=True)
+                                                 workload_node_count=20,
+                                                 ab=True,
+                                                 namespace=namespace)
 

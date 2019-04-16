@@ -374,10 +374,10 @@ def create_scale_deployment(name, cpu_cost):
     body['spec']['template']['spec']['containers'][0]['resources']['limits']['cpu'] = cpu_cost
     v1_beta.create_namespaced_deployment(body=body, namespace='default')
 
-def get_all_pods_from_deployment(deployment_name, label = None, safe = False):
+def get_all_pods_from_deployment(deployment_name, namespace="default", label = None, safe = False):
 
     if safe:
-        lists = subprocess.check_output("kubectl get pods | grep \'" + deployment_name + "\'", shell=True) \
+        lists = subprocess.check_output("kubectl get pods --namespace=" + namespace + "| grep \'" + deployment_name + "\'", shell=True) \
                     .decode('utf-8').split("\n")[:-1]
 
         lists2 = []
