@@ -311,6 +311,9 @@ def create_and_deploy_workload_deployment(name, replicas, num_requests, concurre
     else:
         body['spec']['template']['spec']['containers'][0]['image'] = "rbala19/wrk"
 
+    v1_beta.create_namespaced_deployment(body=body, namespace='default')
+
+def assign_nodes(node_count):
     remove_node_labels = subprocess.check_output("kubectl label nodes --all nodetype-", shell=True)
 
     nodes = [node.metadata.name for node in v1.list_node().items if
@@ -324,7 +327,7 @@ def create_and_deploy_workload_deployment(name, replicas, num_requests, concurre
 
     label_all_unlabeled_nodes_as_service()
 
-    v1_beta.create_namespaced_deployment(body=body, namespace='default')
+
 
 def label_all_unlabeled_nodes_as_service():
     all_nodes = [node.metadata.name for node in v1.list_node().items if
@@ -370,8 +373,24 @@ def create_scale_deployment(name, cpu_cost):
             os.path.join(os.getcwd() + "/manifests/",
             '{}.yaml'.format(name))))
 
-    body['spec']['template']['spec']['containers'][0]['resources']['requests']['cpu'] = cpu_cost
-    body['spec']['template']['spec']['containers'][0]['resources']['limits']['cpu'] = cpu_cost
+    spec = body['spec']['template']['spec']['containers'][0]
+
+    spec2 = body['spec']['template']
+    if "nodeSelector" not in spec2:
+        spec2['nodeSelector'] = {}
+
+    spec2['nodeSelector']["nodetype"] = "service"
+
+    if "resources" not in spec:
+        spec['resources'] = {}
+        sub_dict = spec['resources']
+        sub_dict['limits'] = {}
+        sub_dict['limits']['cpu'] = None
+        sub_dict['requests'] = {}
+        sub_dict['requests']['cpu'] = None
+
+    spec['resources']['requests']['cpu'] = cpu_cost
+    spec['resources']['limits']['cpu'] = cpu_cost
     v1_beta.create_namespaced_deployment(body=body, namespace='default')
 
 def get_all_pods_from_deployment(deployment_name, namespace="default", label = None, safe = False):

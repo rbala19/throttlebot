@@ -42,6 +42,8 @@ def create_experiment_folder(scale_deployment_list, workload_services_list, work
         for i in args:
             experiment_setting_file.write('{} = {}'.format(i, values[i]))
 
+    print("Created experiment directory")
+
     return directory
 
 def calculate_deployment_cost(deployment_name, starting_time, namespace, ending_time = None):
@@ -90,7 +92,7 @@ def calculate_pod_cost(pod_name, cpu_quota, starting_time, ending_time):
 def wait_for_autoscaler_steady_state(scale_deployment_name, namespace, return_queue = None):
 
 
-    label_all_unlabeled_nodes_as_service()
+    # label_all_unlabeled_nodes_as_service()
 
     pod_count_every_30_sec= []
 
@@ -140,8 +142,7 @@ def generate_workload_name(workload_prefix, service_name, endpoint):
     str_to_return = "{}-{}".format(workload_prefix, service_name)
 
     if endpoint:
-        endpoint.replace("/", "-")
-        str_to_return += "-{}".format(endpoint)
+        str_to_return += "-{}".format(endpoint.replace("/", "-"))
 
     return str_to_return
 
@@ -156,11 +157,14 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
     performance_data_list_2 = defaultdict(list)
     cost_data_list  = defaultdict(list)
     cost_data_list_2 = defaultdict(list)
+    time_to_steady = defaultdict(list)
+    time_to_steady2 = defaultdict(list)
 
     for trial in range(1):
 
         for utilization in [20]:
 
+            assign_nodes(node_count=workload_node_count)
 
             #Deploying all scale deployments
 
@@ -168,15 +172,19 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                 deploying = True
                 while deploying:
                     try:
+                        # print("Deploying {}".format(scale_deployment_list[index]))
                         create_scale_deployment(scale_deployment_list[index], cpu_cost=cpu_cost_list[index])
                         deploying = False
                     except:
+                        traceback.print_exc()
                         pass
 
-                wait_for_scale_deployment(scale_deployment_list[index])
 
+            sleep(10)
 
             #Deploying all workload deployments per service per endpoint
+
+            print("Deploying workload pods")
 
             for index in range(len(workload_services_list)):
 
@@ -190,16 +198,35 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
             #Create autoscaler for all scale deployments
 
-            for index in range(len(scale_deployment_list)):
-                create_autoscaler(scale_deployment_list[index], utilization, min_scaleout, max_scaleout)
 
             print("Creating autoscalers with utilization {}".format(utilization))
 
+            for index in range(len(scale_deployment_list)):
+                create_autoscaler(scale_deployment_list[index], utilization, min_scaleout, max_scaleout)
+
+
+
             print("Waiting for autoscaler metrics")
 
-            times_of_deployment = []
+
+            queue = mp.Queue()
+
+            process_list = []
             for index in range(len(scale_deployment_list)):
-                times_of_deployment.append(wait_for_autoscale_metrics(scale_deployment_list[index]))
+                args = [scale_deployment_list[index], queue]
+
+                process_list.append(mp.Process(target=wait_for_autoscale_metrics, args=args))
+                process_list[-1].start()
+
+            for process in process_list:
+                process.join()
+
+
+            times_of_deployment = {}
+            for process in process_list:
+                queue_result = queue.get()
+                times_of_deployment[list(queue_result.keys())[0]] = list(queue_result.values())[0]
+
 
             print("Waiting for Autoscaler steady state")
 
@@ -215,23 +242,41 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
                 process_list.append(mp.Process(target=wait_for_autoscaler_steady_state, args=args))
                 process_list[-1].start()
 
-            for process in process_list:
-                process.join()
-
-
-            # Collects and writes cost data
-
-
             scale_name_to_ending_time = {}
             for process in process_list:
                 queue_result = queue.get()
-                scale_name_to_ending_time[queue_result.keys()[0]] = queue_result.values()[0]
+                scale_name_to_ending_time[list(queue_result.keys())[0]] = list(queue_result.values())[0]
 
-            for index in scale_deployment_list:
+
+            # times_of_deployment = {}
+            # times_of_deployment["apartmentapp"] = int(time.time())
+            # times_of_deployment["elasticsearch"] = int(time.time())
+            # times_of_deployment["kibana"] = int(time.time())
+            #
+            # sleep(60)
+            #
+            #
+            # scale_name_to_ending_time = {}
+            # scale_name_to_ending_time["apartmentapp"] = int(time.time())
+            # scale_name_to_ending_time["elasticsearch"] = int(time.time())
+            # scale_name_to_ending_time["kibana"] = int(time.time())
+
+            #Logging time to steady state
+
+            for index in range(len(scale_deployment_list)):
+                with open('{}/time_to_steady_{}_{}_{}'.format(experiment_dir, scale_deployment_list[index], label, trial), 'w') as file:
+
+                    time_to_steady[scale_deployment_list[index]].append(scale_name_to_ending_time[scale_deployment_list[index]] -
+                                                                        times_of_deployment[scale_deployment_list[index]])
+
+                    file.write(json.dumps(time_to_steady[scale_deployment_list[index]]))
+
+
+            for index in range(len(scale_deployment_list)):
 
 
                 cost_data = calculate_deployment_cost(deployment_name=scale_deployment_list[index],
-                                                      starting_time=times_of_deployment[index],
+                                                      starting_time=times_of_deployment[scale_deployment_list[index]],
                                                       namespace=namespace,
                     ending_time=scale_name_to_ending_time[scale_deployment_list[index]])
 
@@ -272,6 +317,8 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
             #################################################################################
 
+
+
             for index in range(len(workload_services_list)):
 
                 for endpoint in additional_args_dict[workload_services_list[index]]:
@@ -303,7 +350,19 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
             scale_name_to_ending_time = {}
             for process in process_list:
                 queue_result = queue.get()
-                scale_name_to_ending_time[queue_result.keys()[0]] = queue_result.values()[0]
+                scale_name_to_ending_time[list(queue_result.keys())[0]] = list(queue_result.values())[0]
+
+            #Logging time to steady state
+
+            for index in range(len(scale_deployment_list)):
+                with open('{}/time_to_steady2_{}_{}_{}'.format(experiment_dir, scale_deployment_list[index], label, trial), 'w') as file:
+
+                    time_to_steady2[scale_deployment_list[index]].append(scale_name_to_ending_time[scale_deployment_list[index]] -
+                                                                        timestamp2)
+
+                    file.write(json.dumps(time_to_steady2[scale_deployment_list[index]]))
+
+
 
             for index in range(len(scale_deployment_list)):
 
@@ -361,23 +420,24 @@ def wait_for_scale_deployment(deployment_name, namespace="default"):
             ready = True
         sleep(2)
 
-def wait_for_autoscale_metrics(deployment_name):
+def wait_for_autoscale_metrics(deployment_name, queue):
     ready = False
     try:
         while not ready:
-            output = subprocess.check_output("kubectl describe hpa/{}".format(deployment_name) + "| grep \"<unknown>\""
+            output = subprocess.check_output("kubectl describe hpa {}".format(deployment_name) + "| grep \"<unknown>\""
                                              ,shell=True).decode('utf-8')
             sleep(5)
     except:
-        return int(time.time())
+        queue.put({deployment_name: int(time.time())})
+        return
 
 def delete_all_deployments(scale_deployment_list, workload_services_list, additional_args_dict):
     delete = False
     for scale_name in scale_deployment_list:
         try:
             subprocess.Popen(['kubectl', 'delete', 'deployment', scale_name])
-            subprocess.Popen(['kubectl', 'delete', 'hpa/{}'.format(scale_name)])
             delete = True
+            subprocess.Popen(['kubectl', 'delete', 'hpa', scale_name])
         except:
             pass
 
@@ -386,8 +446,9 @@ def delete_all_deployments(scale_deployment_list, workload_services_list, additi
         for endpoint in additional_args_dict[workload_services_list[index]]:
 
             try:
-                subprocess.Popen(['kubectl', 'delete', 'deployment', generate_workload_name(
-                    workload_name, workload_services_list[index], endpoint)])
+
+                subprocess.check_output('kubectl delete deployment {}'.format(generate_workload_name(
+                    workload_name, workload_services_list[index], endpoint)), shell=True)
                 delete = True
             except:
                 pass
@@ -419,6 +480,7 @@ if __name__ == "__main__":
 
 
     delete_all_deployments(scale_deployment_list, workload_services_list, additional_args_dict)
+
 
     experiment_dir = create_experiment_folder(scale_deployment_list=scale_deployment_list,
                                                  workload_deployment_name=workload_name,

@@ -87,7 +87,7 @@ def parse_results(deployment_name, num_iterations, namespace, ab = True):
                     pod_data['latency_90'].append(float(subprocess.check_output(latency_90_cmd, shell = True).decode('utf-8')[:-1]))
 
                 except Exception as e:
-                    print("THE LOG IS " + log + "\n\n\n")
+                    # print("THE LOG IS " + log + "\n\n\n")
                     traceback.print_exc()
 
                 try:

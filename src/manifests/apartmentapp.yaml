@@ -1,19 +1,3 @@
----
-#node service
-apiVersion: v1
-kind: Service
-metadata:
-  name: apartmentapp
-  labels:
-    appName: apartmentapp
-spec:
-  selector:
-    appName: apartmentapp
-  ports:
-  - port: 80
-    targetPort: 80
-  type: ClusterIP
----
 #node deployment
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -50,4 +34,6 @@ spec:
           value: 'postgresql://postgres:runner@postgres'
         - name: 'PORT'
           value: '5432'
+      nodeSelector:
+        nodetype: service
       terminationGracePeriodSeconds: 10
