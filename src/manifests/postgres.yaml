@@ -1,0 +1,44 @@
+---
+#node service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    appName: postgres
+spec:
+  selector:
+    appName: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP
+---
+#node deployment
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      appName: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        appName: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: index.docker.io/postgres:9.4
+        ports:
+        - containerPort: 5432
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns
+        - name: PGPASSWORD
+          value: 'runner'
+        - name: PGPORT
+          value: '5432'

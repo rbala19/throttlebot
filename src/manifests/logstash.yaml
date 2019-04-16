@@ -1,0 +1,41 @@
+---
+#node service
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+  labels:
+    appName: logstash
+spec:
+  selector:
+    appName: logstash
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP
+---
+#node deployment
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: logstash
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      appName: logstash
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        appName: logstash
+    spec:
+      containers:
+      - name: postgres
+        image: docker.elastic.co/logstash/logstash:6.6.1
+        ports:
+        - containerPort: 5432
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns
+

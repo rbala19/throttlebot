@@ -1,0 +1,53 @@
+---
+#node service
+apiVersion: v1
+kind: Service
+metadata:
+  name: apartmentapp
+  labels:
+    appName: apartmentapp
+spec:
+  selector:
+    appName: apartmentapp
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+#node deployment
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: apartmentapp
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      appName: apartmentapp
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        appName: apartmentapp
+    spec:
+      containers:
+      - name: apartmentapp
+        image: index.docker.io/xuruichen/apartment:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns
+        - name: 'mySQLHost'
+          value: 'mysql'
+        - name: 'elasticURL'
+          value: 'http://elasticsearch:9200'
+        - name: 'postgresURL'
+          value: 'postgresql://postgres:runner@postgres:5432/postgres'
+        - name: 'PW'
+          value: 'runner'
+        - name: 'HOST'
+          value: 'postgresql://postgres:runner@postgres'
+        - name: 'PORT'
+          value: '5432'
+      terminationGracePeriodSeconds: 10

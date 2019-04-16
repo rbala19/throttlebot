@@ -1,0 +1,41 @@
+---
+#node service
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  labels:
+    appName: kibana
+spec:
+  selector:
+    appName: kibana
+  ports:
+  - port: 5601
+    targetPort: 5601
+  type: ClusterIP
+---
+#node deployment
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      appName: kibana
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        appName: kibana
+    spec:
+      containers:
+      - name: kibana
+        image: index.docker.io/kibana:6.6.1
+        ports:
+        - containerPort: 5601
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns
+

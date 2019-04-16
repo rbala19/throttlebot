@@ -1,0 +1,41 @@
+---
+#node service
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  labels:
+    appName: elasticsearch
+spec:
+  selector:
+    appName: elasticsearch
+  ports:
+  - port: 9200
+    targetPort: 9200
+  type: ClusterIP
+---
+#node deployment
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: elasticsearch
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      appName: elasticsearch
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        appName: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        image: index.docker.io/elasticsearch:2.4
+        ports:
+        - containerPort: 9200
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns
+      terminationGracePeriodSeconds: 10
