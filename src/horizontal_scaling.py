@@ -10,6 +10,7 @@ import logging
 from workload_manager import *
 import json
 import multiprocessing as mp
+import inspect
 
 def create_autoscaler(deployment_name, cpu_percent, min_size, max_size):
 
@@ -18,6 +19,30 @@ def create_autoscaler(deployment_name, cpu_percent, min_size, max_size):
                                                                                                     min_size,
                                                                                                     max_size),
                             shell=True)
+
+
+def create_experiment_folder(scale_deployment_list, workload_services_list, workload_deployment_name, workload_size_list,
+                                                 increased_workload_size_list, num_iterations,
+                               min_scaleout, max_scaleout, cpu_cost_list, additional_args_dict, workload_node_count=4, label="", ab = True,
+                                                 namespace="default"):
+    experiment_start_time = str(time.ctime())
+    # experiment_start_time = experiment_start_time.replace(":", "-")
+    # experiment_start_time = experiment_start_time.strip(" ")
+    directory = './autoscaling_results/{}'.format(experiment_start_time)
+
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print ('Error: Creating directory. ' + directory)
+
+    frame = inspect.currentframe()
+    args, _, _, values = inspect.getargvalues(frame)
+    with open(directory + '/experiment_settings.txt', 'a') as experiment_setting_file:
+        for i in args:
+            experiment_setting_file.write('{} = {}'.format(i, values[i]))
+
+    return directory
 
 def calculate_deployment_cost(deployment_name, starting_time, namespace, ending_time = None):
 
@@ -124,7 +149,7 @@ def generate_workload_name(workload_prefix, service_name, endpoint):
 def run_utilization_experiment_variable_workload(scale_deployment_list, workload_services_list, workload_deployment_name, workload_size_list,
                                                  increased_workload_size_list, num_iterations,
                                min_scaleout, max_scaleout, cpu_cost_list, additional_args_dict, workload_node_count=4, label="", ab = True,
-                                                 namespace="default"):
+                                                 namespace="default", experiment_dir = "./"):
 
 
     performance_data_list = defaultdict(list)
@@ -215,7 +240,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
                 print("Writing cost data to file")
 
-                with open('cost_results_{}_{}_{}'.format(scale_deployment_list[index], label, trial), 'w') as file:
+                with open('{}/cost_results_{}_{}_{}'.format(experiment_dir, scale_deployment_list[index], label, trial), 'w') as file:
 
                     cost_data_list[scale_deployment_list[index]].append(({"data": cost_data, "utilization": utilization}))
 
@@ -241,7 +266,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
 
 
-                with open('performance_results_{}_{}_{}'.format(workload_services_list[index], label, trial), 'w') as file:
+                with open('{}/performance_results_{}_{}_{}'.format(experiment_dir, workload_services_list[index], label, trial), 'w') as file:
 
                     file.write(json.dumps(performance_data_list[workload_services_list[index]]))
 
@@ -293,7 +318,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
                 print("Writing cost data to file")
 
-                with open('cost_results2_{}_{}_{}'.format(scale_deployment_list[index], label, trial), 'w') as file:
+                with open('{}/cost_results2_{}_{}_{}'.format(experiment_dir, scale_deployment_list[index], label, trial), 'w') as file:
 
                     cost_data_list_2[scale_deployment_list[index]].append(({"data": cost_data, "utilization": utilization}))
 
@@ -318,7 +343,7 @@ def run_utilization_experiment_variable_workload(scale_deployment_list, workload
 
 
 
-                with open('performance_results2_{}_{}_{}'.format(workload_services_list[index], label, trial), 'w') as file:
+                with open('{}/performance_results2_{}_{}_{}'.format(experiment_dir, workload_services_list[index], label, trial), 'w') as file:
 
                     file.write(json.dumps(performance_data_list_2[workload_services_list[index]]))
 
@@ -395,7 +420,7 @@ if __name__ == "__main__":
 
     delete_all_deployments(scale_deployment_list, workload_services_list, additional_args_dict)
 
-    run_utilization_experiment_variable_workload(scale_deployment_list=scale_deployment_list,
+    experiment_dir = create_experiment_folder(scale_deployment_list=scale_deployment_list,
                                                  workload_deployment_name=workload_name,
                                                  workload_services_list=workload_services_list,
                                                  additional_args_dict=additional_args_dict,
@@ -409,4 +434,20 @@ if __name__ == "__main__":
                                                  workload_node_count=20,
                                                  ab=True,
                                                  namespace=namespace)
+
+    run_utilization_experiment_variable_workload(scale_deployment_list=scale_deployment_list,
+                                                 workload_deployment_name=workload_name,
+                                                 workload_services_list=workload_services_list,
+                                                 additional_args_dict=additional_args_dict,
+                                                 workload_size_list=workload_size_list,
+                                                 increased_workload_size_list=increased_workload_size_list,
+                                                 num_iterations=num_iterations,
+                                                 min_scaleout=min_scaleout,
+                                                 max_scaleout=max_scaleout,
+                                                 cpu_cost_list=[str(get_node_capacity() / float(pods_per_node)) for pods_per_node in pods_per_nodes_list],
+                                                 label="{}podsPerNode".format(pods_per_nodes_list[0]),
+                                                 workload_node_count=20,
+                                                 ab=True,
+                                                 namespace=namespace,
+                                                 experiment_dir=experiment_dir)
 
