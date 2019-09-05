@@ -13,20 +13,18 @@ from poll_cluster_state import *
 from stress_analyzer import *
 from run_throttlebot import parse_resource_config_file
 
-import logging
-
-def reset_resources():
+def reset_resources(workload_config):
     vm_list = get_actual_vms()
     all_services = get_actual_services()
     all_resources = get_stressable_resources()
 
     mr_list = get_all_mrs_cluster(vm_list, all_services, all_resources)
-    logging.info('Resetting provisions for {}'.format([mr.to_string() for mr in mr_list]))
+    print 'Resetting provisions for {}'.format([mr.to_string() for mr in mr_list])
 
     for mr in mr_list:
-        resource_modifier.reset_mr_provision(mr)
+        resource_modifier.reset_mr_provision(mr, workload_config)
 
-    logging.info('All MRs reset')
+    print 'All MRs reset'
 
 # # INCOMPLETE
 # # Must set preferred performance index
@@ -88,5 +86,5 @@ if __name__ == "__main__":
     if args.reset_resources:
         reset_resources()
     elif args.plot_cumm_mr != 0:
-        logging.info('Plotting up to {} iterations'.format(args.plot_cumm_mr))
+        print 'Plotting up to {} iterations'.format(args.plot_cumm_mr)
         # plot_cumm_mr(redis_db, args.plot_cumm_mr, workload_config, filter_config)
