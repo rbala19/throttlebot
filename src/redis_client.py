@@ -3,6 +3,7 @@ import redis.client
 from mr import MR
 
 import logging
+import json
 
 '''
 A Throttlebot abstraction over Redis that allows Throttlebot to write experiment results and make queries to the Throttle Data store
@@ -34,7 +35,7 @@ def write_redis_results(redis_db, mr, increment_to_result, experiment_iteration_
 
     for stress_weight in increment_to_result:
         experiment_results = increment_to_result[stress_weight][perf_metric]
-        new_value_created = redis_db.hset(hash_name, stress_weight, experiment_results)
+        new_value_created = redis_db.hset(hash_name, stress_weight, json.dumps(experiment_results))
 
         # This function should never be overwriting a previous value
         if new_value_created == 1:
@@ -46,7 +47,7 @@ def write_redis_results(redis_db, mr, increment_to_result, experiment_iteration_
 def read_redis_result(redis_db, experiment_iteration_count, mr, perf_metric):
     logging.info('Reading results from Redis')
     hash_name = generate_hash_key(experiment_iteration_count, mr, perf_metric)
-    return redis_db.hgetall(hash_name)
+    return json.loads(redis_db.hgetall(hash_name))
 
 # Writes scored result of the experiment to Redis
 # Maps the ordered performance times to the correct MR experiment
@@ -56,7 +57,8 @@ def write_redis_ranking(redis_db, experiment_iteration_count, perf_metric, mean_
     logging.info('SortedSetName: {}'.format(sorted_set_name))
 
     mr_key = generate_hash_key(experiment_iteration_count, mr, perf_metric)
-    redis_db.zadd(sorted_set_name, mean_result, mr_key)
+    redis_db.zadd(sorted_set_name, {mr_key: mean_result}, nx=True)
+    logging.info("Length of ranking now is {}".format(len(redis_db.zrange(sorted_set_name, 0, -1, desc=False, withscores=True))))
 
 # Redis sets are ordered from lowest score to the highest score
 # A metric where lower is better would have get_lowest parameter set to True
@@ -142,7 +144,7 @@ def write_summary_redis(redis_db, experiment_iteration_count, mimr, perf_gain, a
     redis_db.hset(hash_name, 'elapsed_time', elapsed_time)
     redis_db.hset(hash_name, 'cumulative_mr', cumm_mr)
     redis_db.hset(hash_name, 'analytic_perf', analytic_perf)
-    redis_db.hset(hash_name, 'is_backtrack', is_backtrack)
+    redis_db.hset(hash_name, 'is_backtrack', str(is_backtrack))
     logging.info('Summary of Iteration {} written to redis'.format(experiment_iteration_count))
 
 def read_summary_redis(redis_db, experiment_iteration_count):
@@ -154,7 +156,7 @@ def read_summary_redis(redis_db, experiment_iteration_count):
     elapsed_time = redis_db.hget(hash_name, 'elapsed_time')
     cumulative_mr = redis_db.hget(hash_name, 'cumulative_mr')
     analytic_perf = redis_db.hget(hash_name, 'analytic_perf')
-    is_backtrack = redis_db.hget(hash_name, 'is_backtrack')
+    is_backtrack = bool(redis_db.hget(hash_name, 'is_backtrack'))
     return mimr, action_taken, perf_improvement,analytic_perf, current_perf, elapsed_time, cumulative_mr, is_backtrack
 
 
