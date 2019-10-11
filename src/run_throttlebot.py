@@ -29,6 +29,7 @@ from filter_policy import *
 from poll_cluster_state import *
 from instance_specs import *
 from mr	import MR
+import shlex
 
 import redis.client
 import redis_client as tbot_datastore
@@ -704,6 +705,10 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
 
     if nimr_squeeze_only:
         num_iterations = 2
+
+    date_time = datetime.now()
+    file_name = datetime.strptime("21/11/06 16:30", "%d/%m/%y %H:%M")
+    subprocess.Popen(shlex.split("mkdir /Users/rahulbalakrishnan/Desktop/data/tbotExperiment-{}"))
         
     # Modified while condition for completion
     while experiment_count < num_iterations:
@@ -747,6 +752,10 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
 
             preferred_results = experiment_results[preferred_performance_metric]
             mean_result = mean_list(preferred_results)
+
+            if (mean_result < 1500):
+
+
             tbot_datastore.write_redis_ranking(redis_db, experiment_count,
                                                preferred_performance_metric,
                                                mean_result, mr, stress_weight)

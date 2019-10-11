@@ -6,7 +6,7 @@ stress_weight = -50
 improve_weight = 50
 stress_these_resources = CPU-QUOTA,DISK,NET,MEMORY
 stress_these_services = node-app:node-todo.git,haproxy:1.7,quilt/mongo
-stress_these_machines = 13.56.248.77,13.57.217.49
+stress_these_machines = 54.219.186.95,54.219.145.85
 redis_host = localhost
 stress_policy = ALL
 machine_type = c4.large
@@ -22,8 +22,8 @@ fill_services_first =
 [Workload]
 
 type = todo-app
-frontend = 13.57.217.49:80
-request_generator = 18.144.18.119
+frontend = 54.219.186.95:80
+request_generator = 54.67.52.240
 additional_args =
 additional_arg_values =
 tbot_metric = latency_99
