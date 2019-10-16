@@ -597,7 +597,7 @@ default_mr_config: Filtered MRs that should be stress along with their default a
 '''
 
 def run(sys_config, workload_config, filter_config, default_mr_config,
-        last_completed_iter=0, fake=False, run_one_iteration=False):
+        last_completed_iter=0, fake=False, run_one_iteration=False, time_to_beat = -100):
     redis_host = sys_config['redis_host']
     baseline_trials = sys_config['baseline_trials']
     experiment_trials = sys_config['trials']
@@ -660,6 +660,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
 
     # Initialize time for data charts
     time_start = datetime.datetime.now()
+    time_start_secs = time.time()
 
     logging.info('*' * 20)
     logging.info('RUNNING BASELINE')
@@ -706,9 +707,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
     if nimr_squeeze_only:
         num_iterations = 2
 
-    date_time = datetime.now()
-    file_name = datetime.strptime("21/11/06 16:30", "%d/%m/%y %H:%M")
-    subprocess.Popen(shlex.split("mkdir /Users/rahulbalakrishnan/Desktop/data/tbotExperiment-{}"))
+
         
     # Modified while condition for completion
     while experiment_count < num_iterations:
@@ -751,9 +750,16 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             experiment_results = measure_runtime(workload_config, experiment_trials)
 
             preferred_results = experiment_results[preferred_performance_metric]
+            logging.info("Results are {}".format(preferred_results))
             mean_result = mean_list(preferred_results)
 
-            if (mean_result < 1500):
+            if mean_result < time_to_beat:
+                logging.info("Mean result is {}".format(mean_result))
+                logging.info("time to beat is {}".format(time_to_beat))
+                now = time.time()
+                print("Beat Time-to-beat with these stats: {}".format([mean_result, experiment_count,
+                                                                       now - time_start_secs]))
+
 
 
             tbot_datastore.write_redis_ranking(redis_db, experiment_count,
@@ -912,6 +918,16 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                                            time_delta.seconds, cumulative_mr_count)
 
         current_performance = improved_performance
+
+        if current_performance < time_to_beat:
+            logging.info("Mean result is {}".format(current_performance))
+            logging.info("time to beat is {}".format(time_to_beat))
+            now = time.time()
+            print("Beat Time-to-beat with these stats: {}".format([current_performance, experiment_count,
+                                                                   now - time_start_secs]))
+
+
+
 
         # Generating overall performance improvement
         chart_generator.get_summary_performance_charts(redis_db, workload_config, experiment_count, time_start)
@@ -1437,6 +1453,7 @@ if __name__ == "__main__":
     parser.add_argument("--resource_config", help='Default Resource Allocation for Throttlebot')
     parser.add_argument("--last_completed_iter", type=int, default=0, help="Last iteration completed")
     parser.add_argument("--log", help='Default Logging File')
+    parser.add_argument("--time_to_beat", type=int, default = -100, help="terminates after latency drops below time to beat")
     args = parser.parse_args()
 
     # Setup Logging
@@ -1479,7 +1496,7 @@ if __name__ == "__main__":
  
     experiment_start = time.time()
     
-    run(sys_config, workload_config, filter_config, mr_allocation, args.last_completed_iter)
+    run(sys_config, workload_config, filter_config, mr_allocation, args.last_completed_iter, time_to_beat=args.time_to_beat)
     experiment_end = time.time()
 
     # Record the time and the number of MRs visited
