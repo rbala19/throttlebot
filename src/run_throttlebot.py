@@ -628,6 +628,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
 
     killer = GracefulKiller(redis_db)
 
+    open('best_results', 'w').close()
+    min_so_far = None
+
     logging.info('\n' * 2)
     logging.info('*' * 20)
     logging.info('INITIALIZING RESOURCE CONFIG')
@@ -753,11 +756,13 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             logging.info("Results are {}".format(preferred_results))
             mean_result = mean_list(preferred_results)
 
-            if mean_result < time_to_beat:
+            if not min_so_far or mean_result < min_so_far:
                 logging.info("Mean result is {}".format(mean_result))
                 logging.info("time to beat is {}".format(time_to_beat))
+                min_so_far = mean_result
                 now = time.time()
-                print("Beat Time-to-beat with these stats: {}".format([mean_result, experiment_count,
+                with open("best_results", "a") as f:
+                    f.write("Beat Time-to-beat with these stats: {}\n".format([mean_result, experiment_count,
                                                                        now - time_start_secs]))
 
 
@@ -919,13 +924,14 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
 
         current_performance = improved_performance
 
-        if current_performance < time_to_beat:
+        if not min_so_far or current_performance < min_so_far:
             logging.info("Mean result is {}".format(current_performance))
+            min_so_far = current_performance
             logging.info("time to beat is {}".format(time_to_beat))
             now = time.time()
-            print("Beat Time-to-beat with these stats: {}".format([current_performance, experiment_count,
-                                                                   now - time_start_secs]))
-
+            with open("best_results", "a") as f:
+                f.write("Beat Time-to-beat with these stats: {}\n".format([current_performance, experiment_count,
+                                                                           now - time_start_secs]))
 
 
 

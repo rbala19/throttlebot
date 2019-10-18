@@ -19,7 +19,7 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
         ps = subprocess.Popen(shlex.split("python2.7 run_throttlebot.py" +
                                                      " --config_file workload_config --time_to_beat {}"
-                                                            .format(time_to_beat)), stdout=subprocess.PIPE)
+                                                            .format(time_to_beat)))
 
 
         result_list = []
@@ -32,15 +32,16 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
                 if (current_time - time_to_compare >= polling_frequency):
 
                     time_to_compare = current_time
-                    ps = subprocess.Popen(shlex.split("grep \'Beat Time-to-beat with these stats\'"),
-                                                 stdin = ps.stdout,
-                                                 shell=False)
-                    output = ps.communicate()
+                    output = subprocess.check_output("grep \'Beat Time-to-beat with these stats\' best_results | tail -n 1",
+                                                 shell=True)
+                    # output = ps.communicate()
                     # ps2 = subprocess.Popen(shlex.split("tail -n 1"), stdin = ps.stdout, shell=False)
 
 
                     # output = "test"
-                    output = str(output.decode("utf-8"))
+                    output = str(output.decode("utf-8"))[:-1]
+
+                    print(output)
                     data = json.loads(output[output.index(": ") + 2:])
 
                     print("Data stored is {}".format(data))
@@ -52,10 +53,14 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
             except Exception as e:
                 print("Error is {}".format(str(e)))
                 time.sleep(min(2, polling_frequency))
+                start = time.time()
+
                 pass
 
 
         outer_result_list.append(result_list)
+
+        ps.kill()
 
 
 
@@ -64,15 +69,6 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
                       .format(threshold_date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
         str_data = json.dumps(outer_result_list)
         f.write(str_data)
-
-
-
-
-def poll_for_results(process, duration, polling_frequency, queue):
-
-    process.kill()
-
-
 
 
 
