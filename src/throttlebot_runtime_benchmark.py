@@ -67,11 +67,11 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
     threshold_date_time = datetime.now()
     with open("/Users/rahulbalakrishnan/Desktop/data/tbot_threshold/{}"
                       .format(threshold_date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
-        str_data = json.dumps(outer_result_list)
+        str_data = json.dumps({"results": outer_result_list, "polling_frequency": polling_frequency, "duration": duration})
         f.write(str_data)
 
 
 
-run(num_iterations=2, time_to_beat=10000, duration=2*60, polling_frequency=5)
+run(num_iterations=2, time_to_beat=10000, duration=5*60, polling_frequency=30)
 
 
