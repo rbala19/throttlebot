@@ -25,10 +25,11 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
         result_list = []
         start = time.time()
         time_to_compare = start
+        first = True
         while time.time() - start < duration:
             try:
                 current_time = time.time()
-                print("Current time is {} and time to compare is {}".format(current_time, time_to_compare))
+                # print("Current time is {} and time to compare is {}".format(current_time, time_to_compare))
                 if (current_time - time_to_compare >= polling_frequency):
 
                     time_to_compare = current_time
@@ -41,10 +42,15 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
                     # output = "test"
                     output = str(output.decode("utf-8"))[:-1]
 
-                    print(output)
+                    # print(output)
                     data = json.loads(output[output.index(": ") + 2:])
 
                     print("Data stored is {}".format(data))
+
+
+                    if first:
+                        start = time.time()
+                        first = False
 
                     result_list.append(data)
 
@@ -53,8 +59,6 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
             except Exception as e:
                 print("Error is {}".format(str(e)))
                 time.sleep(min(2, polling_frequency))
-                start = time.time()
-
                 pass
 
 
@@ -72,6 +76,6 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
 
 
-run(num_iterations=2, time_to_beat=10000, duration=5*60, polling_frequency=30)
+run(num_iterations=2, time_to_beat=10000, duration=30*60, polling_frequency=30)
 
 
