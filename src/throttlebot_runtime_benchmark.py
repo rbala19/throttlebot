@@ -12,9 +12,9 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
     outer_result_list = []
     for _ in range(num_iterations):
 
-        # date_time = datetime.now()
-        # file_name = ("/Users/rahulbalakrishnan/Desktop/data/tbotExperiment-{}".format(date_time.strftime("%m-%d-%Y-%H-%M-%S")))
-        # subprocess.Popen(shlex.split("mkdir {}".format(file_name)))
+        date_time = datetime.now()
+        file_name = ("/Users/rahulbalakrishnan/Desktop/data/tbotExperiment-{}".format(date_time.strftime("%m-%d-%Y-%H-%M-%S")))
+        subprocess.Popen(shlex.split("mkdir {}".format(file_name)))
 
 
         ps = subprocess.Popen(shlex.split("python2.7 run_throttlebot.py" +
@@ -44,12 +44,13 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
                     # print(output)
                     data = json.loads(output[output.index(": ") + 2:])
+                    data.append(time.time() - start)
 
                     print("Data stored is {}".format(data))
 
 
                     if first:
-                        start = time.time()
+                        start = current_time
                         first = False
 
                     result_list.append(data)
@@ -76,6 +77,6 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
 
 
-run(num_iterations=2, time_to_beat=10000, duration=30*60, polling_frequency=30)
+run(num_iterations=1, time_to_beat=10000, duration=120*60, polling_frequency=30)
 
 

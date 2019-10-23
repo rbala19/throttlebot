@@ -735,6 +735,10 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         mr_to_consider = apply_filtering_policy(redis_db, mr_working_set, experiment_count,
                                                 sys_config, workload_config, filter_config)
 
+        directory = "/Users/rahulbalakrishnan/Desktop/data/"
+        most_recent_folder = sorted([os.path.join(directory, d) for d in os.listdir(directory) if not d.startswith('.')],
+                                    key=os.path.getmtime)[-1]
+
         for mr in mr_to_consider:
             logging.info('\n' * 2)
             logging.info('*' * 20)
@@ -755,6 +759,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             preferred_results = experiment_results[preferred_performance_metric]
             logging.info("Results are {}".format(preferred_results))
             mean_result = mean_list(preferred_results)
+
+            with open(os.path.join(most_recent_folder, "logger-iteration{}".format(experiment_count)), 'a') as f:
+                f.write("{}:{}={}\n".format(mr.to_string(), current_mr_allocation, mean_result))
 
             if not min_so_far or mean_result < min_so_far:
                 logging.info("Mean result is {}".format(mean_result))
@@ -944,6 +951,10 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         # Checkpoint MR configurations and print
         current_mr_config = resource_datastore.read_all_mr_alloc(redis_db)
         print_csv_configuration(current_mr_config)
+
+
+        date_time = datetime.datetime.now()
+        print_csv_configuration(current_mr_config, os.path.join(most_recent_folder, "tuned_config-{}.csv".format(date_time.strftime("%m-%d-%Y-%H-%M-%S"))))
         experiment_count += 1
 
         # Potentially adapt step size if no performance gains observed
@@ -969,6 +980,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                 # Checkpoint MR configurations and print
                 current_mr_config = resource_datastore.read_all_mr_alloc(redis_db)
                 print_csv_configuration(current_mr_config)
+                date_time = datetime.datetime.now()
+                print_csv_configuration(current_mr_config, os.path.join(most_recent_folder, "tuned_config-{}.csv".format(
+                    date_time.strftime("%m-%d-%Y-%H-%M-%S"))))
                 experiment_count += 1
 
                 logging.info('Backtrack completed, referred to as experiment {}'.format(experiment_count))
@@ -991,6 +1005,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         logging.info('{} = {}'.format(mr.to_string(), current_mr_config[mr]))
 
     print_csv_configuration(current_mr_config)
+
 
 def is_baseline_constant(mr_working_set,
                          workload_config,
