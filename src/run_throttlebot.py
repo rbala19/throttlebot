@@ -761,7 +761,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             mean_result = mean_list(preferred_results)
 
             with open(os.path.join(most_recent_folder, "logger-iteration{}".format(experiment_count)), 'a') as f:
-                f.write("{}:{}={}\n".format(mr.to_string(), current_mr_allocation, mean_result))
+                f.write("{}:{} = {}\n".format(mr.to_string(), current_mr_allocation, mean_result))
 
             if not min_so_far or mean_result < min_so_far:
                 logging.info("Mean result is {}".format(mean_result))
@@ -931,6 +931,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
 
         current_performance = improved_performance
 
+        with open(os.path.join(most_recent_folder, "logger-iteration{}".format(experiment_count)), 'a') as f:
+            f.write("Final result of iteration is {}".format(current_performance))
+
         if not min_so_far or current_performance < min_so_far:
             logging.info("Mean result is {}".format(current_performance))
             min_so_far = current_performance
@@ -953,8 +956,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         print_csv_configuration(current_mr_config)
 
 
-        date_time = datetime.datetime.now()
-        print_csv_configuration(current_mr_config, os.path.join(most_recent_folder, "tuned_config-{}.csv".format(date_time.strftime("%m-%d-%Y-%H-%M-%S"))))
+        print_csv_configuration(current_mr_config, os.path.join(most_recent_folder, "tuned_config-{}.csv".format(experiment_count)))
         experiment_count += 1
 
         # Potentially adapt step size if no performance gains observed

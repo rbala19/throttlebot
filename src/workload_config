@@ -11,12 +11,12 @@ redis_host = localhost
 stress_policy = ALL
 machine_type = c4.large
 quilt_overhead = 10
-gradient_mode = inverted
+gradient_mode = single
 rerun_baseline = False
 nimr_squeeze_only = False
 num_iterations = 20
-error_tolerance = 0.02
-setting_mode = cloud
+error_tolerance = 0.1
+setting_mode = prem
 fill_services_first =
 
 [Workload]
@@ -34,8 +34,8 @@ workload_num = 3
 
 [Filter]
 
-filter_policy =
+filter_policy = RANDOM
 stress_amount = -50
 pipeline_services = 1
 filter_exp_trials = 1
-pipeline_partitions = 1
+pipeline_partitions = 4
