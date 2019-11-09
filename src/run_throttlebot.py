@@ -631,6 +631,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
     open('best_results', 'w').close()
     min_so_far = None
 
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
     logging.info('\n' * 2)
     logging.info('*' * 20)
     logging.info('INITIALIZING RESOURCE CONFIG')
