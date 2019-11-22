@@ -28,7 +28,8 @@ def apply_filtering_policy(redis_db,
                            system_config,
                            workload_config,
                            filter_config,
-                           current_performance=-1):
+                           current_performance=-1,
+                           minSoFar=None):
     filter_policy = filter_config['filter_policy']
     optimize_for_lowest = workload_config['optimize_for_lowest']
     metric = workload_config['tbot_metric']
@@ -36,13 +37,18 @@ def apply_filtering_policy(redis_db,
     
     if filter_policy is None:
         return mr_working_set
-    
-    pipeline_score_list,pipeline_groups = apply_pipeline_filter(redis_db,
+
+    logging.info("Beginning Pipeline: MinSofar is {}".format(minSoFar))
+
+    pipeline_score_list,pipeline_groups,minSoFar = apply_pipeline_filter(redis_db,
                                                                 mr_working_set,
                                                                 experiment_iteration,
                                                                 system_config,
                                                                 workload_config,
-                                                                filter_config)
+                                                                filter_config,
+                                                                minSoFar)
+
+
     mr_of_interest = []
     # Just pick the most impacted pipeline (MIP)
     if filter_policy == 'pipeline':
@@ -62,6 +68,8 @@ def apply_filtering_policy(redis_db,
             if is_constant_perf or is_improved_perf:
                 mr_of_interest.append(pipeline_mr)
 
+    if minSoFar:
+        return mr_of_interest,minSoFar
     return mr_of_interest
 
 '''
@@ -77,7 +85,8 @@ def apply_pipeline_filter(redis_db,
                           experiment_iteration,
                           system_config,
                           workload_config,
-                          filter_config):
+                          filter_config,
+                          minSoFar):
 
     logging.info('*' * 20)
     logging.info('Applying Filtering Pipeline')
@@ -124,6 +133,15 @@ def apply_pipeline_filter(redis_db,
 
         experiment_results = measure_runtime(workload_config, experiment_trials)
         exp_mean = mean_list(experiment_results[tbot_metric])
+
+        if minSoFar and exp_mean < minSoFar and exp_mean:
+            logging.info("Mean result is {}".format(exp_mean))
+            minSoFar = exp_mean
+            now = time.time()
+            with open("best_results", "a") as f:
+                f.write("Beat Time-to-beat with these stats: {}\n".format([exp_mean, experiment_iteration,
+                                                                           -1]))
+
         repr_str = str(pipeline_index)
         tbot_datastore.write_filtered_results(redis_db,
                                               'pipeline',
@@ -147,7 +165,7 @@ def apply_pipeline_filter(redis_db,
                                                                         system_config,
                                                                         optimize_for_lowest=optimize_for_lowest)
 
-    return all_pipeline_score_list, pipeline_groups
+    return all_pipeline_score_list, pipeline_groups, minSoFar
 
 # Logs the Most impacted Pipeline
 def write_log_results(pipeline):

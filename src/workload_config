@@ -1,12 +1,12 @@
 [Basic]
 
 baseline_trials = 1
-trials = 3
+trials = 1
 stress_weight = -50
 improve_weight = 50
 stress_these_resources = CPU-QUOTA,DISK,NET,MEMORY
-stress_these_services = node-app:node-todo.git,haproxy:1.7,quilt/mongo
-stress_these_machines = 54.67.95.39,54.67.14.95
+stress_these_services = tsaianson/node-apt-app,library/postgres:9.4,kibana:4,mysql:5.6.32,elasticsearch:2.4,haproxy:1.7,hantaowang/logstash-postgres
+stress_these_machines = *
 redis_host = localhost
 stress_policy = ALL
 machine_type = c4.large
@@ -17,13 +17,13 @@ nimr_squeeze_only = False
 num_iterations = 20
 error_tolerance = 0.1
 setting_mode = prem
-fill_services_first = node-app:node-todo.git
+fill_services_first = tsaianson/node-apt-app
 
 [Workload]
 
-type = todo-app
-frontend = 54.67.14.95:80
-request_generator = 54.153.123.125
+type = apt-app
+frontend = 54.183.98.247
+request_generator = 13.52.178.33
 additional_args =
 additional_arg_values =
 tbot_metric = latency_99
@@ -38,4 +38,4 @@ filter_policy = pipeline
 stress_amount = -50
 pipeline_services = RANDOM
 filter_exp_trials = 1
-pipeline_partitions = 4
+pipeline_partitions = 6

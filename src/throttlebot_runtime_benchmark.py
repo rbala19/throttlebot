@@ -42,7 +42,7 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
                     # output = "test"
                     output = str(output.decode("utf-8"))[:-1]
 
-                    # print(output)
+                    print(output[output.index(": ") + 2:])
                     data = json.loads(output[output.index(": ") + 2:])
                     data.append(time.time() - start)
 
@@ -77,6 +77,6 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
 
 
-run(num_iterations=1, time_to_beat=10000, duration=60*60, polling_frequency=30)
+run(num_iterations=1, time_to_beat=10000, duration=45*60, polling_frequency=30)
 
 

@@ -674,9 +674,19 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                                            baseline_trials,
                                            workload_config['include_warmup'])
 
+
+
+
     current_performance[preferred_performance_metric] = remove_outlier(current_performance[preferred_performance_metric])
     baseline_performance = current_performance[preferred_performance_metric]
-    
+    baseline_mean = mean_list(baseline_performance)
+
+    min_so_far = baseline_mean
+    now = time.time()
+    with open("best_results", "a") as f:
+        f.write("Beat Time-to-beat with these stats: {}\n".format([baseline_mean, -1,
+                                                                   now - time_start_secs]))
+
     # If fake, then return only baseline
     if fake:
     	return baseline_performance
@@ -733,8 +743,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         analytic_baseline[preferred_performance_metric] = remove_outlier(analytic_baseline[preferred_performance_metric])
 
         # Get a list of MRs to stress in the form of a list of MRs
-        mr_to_consider = apply_filtering_policy(redis_db, mr_working_set, experiment_count,
-                                                sys_config, workload_config, filter_config)
+        mr_to_consider,min_so_far = apply_filtering_policy(redis_db, mr_working_set, experiment_count,
+                                                sys_config, workload_config, filter_config, None, min_so_far)
+
 
         directory = "/Users/rahulbalakrishnan/Desktop/data/"
         most_recent_folder = sorted([os.path.join(directory, d) for d in os.listdir(directory) if not d.startswith('.')],
@@ -764,7 +775,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             with open(os.path.join(most_recent_folder, "logger-iteration{}".format(experiment_count)), 'a') as f:
                 f.write("{}:{} = {}\n".format(mr.to_string(), current_mr_allocation, mean_result))
 
-            if not min_so_far or mean_result < min_so_far:
+            if mean_result < min_so_far and mean_result:
                 logging.info("Mean result is {}".format(mean_result))
                 logging.info("time to beat is {}".format(time_to_beat))
                 min_so_far = mean_result
@@ -935,13 +946,13 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         with open(os.path.join(most_recent_folder, "logger-iteration{}".format(experiment_count)), 'a') as f:
             f.write("Final result of iteration is {}".format(current_performance))
 
-        if not min_so_far or current_performance < min_so_far:
-            logging.info("Mean result is {}".format(current_performance))
-            min_so_far = current_performance
+        if improved_mean < min_so_far and improved_mean:
+            logging.info("Mean result is {}".format(improved_mean))
+            min_so_far = improved_mean
             logging.info("time to beat is {}".format(time_to_beat))
             now = time.time()
             with open("best_results", "a") as f:
-                f.write("Beat Time-to-beat with these stats: {}\n".format([current_performance, experiment_count,
+                f.write("Beat Time-to-beat with these stats: {}\n".format([improved_mean, experiment_count,
                                                                            now - time_start_secs]))
 
 
