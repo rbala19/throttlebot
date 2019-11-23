@@ -617,6 +617,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
     num_iterations = sys_config['num_iterations']
     error_tolerance = sys_config['error_tolerance']
 
+    # tsaianson / node - apt - app, library / postgres:9.4, kibana:4, mysql:5.6
+    # .32, elasticsearch:2.4, haproxy:1.7, hantaowang / logstash - postgres
+
     preferred_performance_metric = workload_config['tbot_metric']
     optimize_for_lowest = workload_config['optimize_for_lowest']
 
