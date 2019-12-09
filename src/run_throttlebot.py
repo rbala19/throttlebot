@@ -641,6 +641,10 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
     # Initialize Redis and Cluster based on the default resource configuration
     init_cluster_capacities_r(redis_db, machine_type, quilt_overhead)
     init_service_placement_r(redis_db, default_mr_config)
+
+    with open("default_mr_config", "w") as f:
+        f.write(json.dumps(default_mr_config))
+
     init_resource_config(redis_db, default_mr_config, machine_type, workload_config)
 
     # In the on-prem mode, fill out resources
