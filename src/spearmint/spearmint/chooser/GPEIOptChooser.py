@@ -219,7 +219,7 @@ class GPEIOptChooser:
              candidates, pending, complete):
 
         # Don't bother using fancy GP stuff at first.
-        if complete.shape[0] < 5:
+        if complete.shape[0] < 10:
             return int(candidates[0]), 1000
 
         # Perform the real initialization.
@@ -235,7 +235,7 @@ class GPEIOptChooser:
 
         # Spray a set of candidates around the min so far
         best_comp = np.argmin(vals)
-        cand2 = np.vstack((np.random.randn(10,comp.shape[1])*0.15 +
+        cand2 = np.vstack((np.random.randn(10,comp.shape[1])*0.5 +
                            comp[best_comp,:], cand))
 
         if self.mcmc_iters > 0:
