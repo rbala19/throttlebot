@@ -18,7 +18,9 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
 
         ps = subprocess.Popen(shlex.split("python2.7 run_throttlebot.py" +
-                                                     " --config_file workload_config_apt --time_to_beat {}"
+                                                     " --config_file workload_config_apt "
+                                                     + "--resource_config resource_config.csv "
+                                                     + "--time_to_beat {}"
                                                             .format(time_to_beat)))
 
 
