@@ -80,7 +80,7 @@ class GPEIOptChooser:
 
         # If multiprocessing fails or deadlocks, set this to False
         self.use_multiprocessing = bool(int(use_multiprocessing))
-
+        # self.use_multiprocessing = False
 
     def dump_hypers(self):
         self.locker.lock_wait(self.state_pkl)
@@ -219,7 +219,7 @@ class GPEIOptChooser:
              candidates, pending, complete):
 
         # Don't bother using fancy GP stuff at first.
-        if complete.shape[0] < 15:
+        if complete.shape[0] < 2:
             return int(candidates[0]), 1000
 
         # Perform the real initialization.
@@ -320,6 +320,7 @@ class GPEIOptChooser:
                                         bounds=b, disp=0)
                 cand2[i,:] = ret[0]
             cand = np.vstack((cand, cand2))
+
 
             ei = self.compute_ei(comp, pend, cand, vals)
             best_cand = np.argmax(ei)
@@ -550,11 +551,16 @@ class GPEIOptChooser:
             func_v = self.amp2*(1+1e-6) - np.sum(beta**2, axis=0)
 
             # Expected improvement
-            func_s = np.sqrt(func_v)
-            u      = (best - func_m) / func_s
-            ncdf   = sps.norm.cdf(u)
-            npdf   = sps.norm.pdf(u)
-            ei     = func_s*( u*ncdf + npdf)
+            try:
+                func_s = np.sqrt(func_v)
+                u      = (best - func_m) / func_s
+                ncdf   = sps.norm.cdf(u)
+                npdf   = sps.norm.pdf(u)
+                ei     = func_s*( u*ncdf + npdf)
+            except Exception as e:
+                print(e.message)
+                return -1
+
 
             return ei
         else:
