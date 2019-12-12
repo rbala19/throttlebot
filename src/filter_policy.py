@@ -36,7 +36,7 @@ def apply_filtering_policy(redis_db,
     error_tolerance = system_config['error_tolerance']
     
     if filter_policy is None:
-        return mr_working_set
+        return mr_working_set, minSoFar
 
     logging.info("Beginning Pipeline: MinSofar is {}".format(minSoFar))
 

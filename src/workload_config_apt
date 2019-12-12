@@ -5,7 +5,7 @@ trials = 1
 stress_weight = -50
 improve_weight = 50
 stress_these_resources = CPU-QUOTA,DISK,NET,MEMORY
-stress_these_services = node-app:node-todo.git,haproxy:1.7,quilt/mongo
+stress_these_services = tsaianson/node-apt-app,kibana:4,library/postgres:9.4,mysql:5.6.32,haproxy:1.7,elasticsearch:2.4,hantaowang/logstash-postgres
 stress_these_machines = *
 redis_host = localhost
 stress_policy = ALL
@@ -16,14 +16,14 @@ rerun_baseline = False
 nimr_squeeze_only = False
 num_iterations = 20
 error_tolerance = 0.1
-setting_mode = prem
-fill_services_first = node-app:node-todo.git
+setting_mode = cloud
+fill_services_first =
 
 [Workload]
 
 type = apt-app
-frontend = 54.215.207.252
-request_generator = 54.193.23.76
+frontend = 13.57.58.49
+request_generator = 52.53.181.27
 additional_args =
 additional_arg_values =
 tbot_metric = latency_99
