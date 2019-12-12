@@ -219,7 +219,7 @@ class GPEIOptChooser:
              candidates, pending, complete):
 
         # Don't bother using fancy GP stuff at first.
-        if complete.shape[0] < 15:
+        if complete.shape[0] < 5:
             return int(candidates[0]), 1000
 
         # Perform the real initialization.
