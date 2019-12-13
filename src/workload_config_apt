@@ -22,8 +22,8 @@ fill_services_first =
 [Workload]
 
 type = apt-app
-frontend = 13.57.58.49
-request_generator = 52.53.181.27
+frontend = 13.57.50.136
+request_generator = 13.57.241.130
 additional_args =
 additional_arg_values =
 tbot_metric = latency_99

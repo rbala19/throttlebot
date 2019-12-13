@@ -642,6 +642,8 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
     init_cluster_capacities_r(redis_db, machine_type, quilt_overhead)
     init_service_placement_r(redis_db, default_mr_config)
 
+    # logging.info(default_mr_config)
+    # print(default_mr_config)
     # with open("default_mr_config", "w") as f:
     #     f.write(json.dumps(default_mr_config))
 

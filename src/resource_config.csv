@@ -1,9 +1,9 @@
 SERVICE,RESOURCE,AMOUNT,REPR
-tsaianson/node-apt-app,CPU-QUOTA,50,PERCENT
+tsaianson/node-apt-app,CPU-QUOTA,45,PERCENT
 tsaianson/node-apt-app,NET,50,PERCENT
 tsaianson/node-apt-app,DISK,33,PERCENT
 tsaianson/node-apt-app,MEMORY,26,PERCENT
-kibana:4,CPU-QUOTA,40,PERCENT
+kibana:4,CPU-QUOTA,35,PERCENT
 kibana:4,NET,37,PERCENT
 kibana:4,DISK,22,PERCENT
 kibana:4,MEMORY,35,PERCENT
@@ -15,7 +15,7 @@ hantaowang/logstash-postgres,CPU-QUOTA,38,PERCENT
 hantaowang/logstash-postgres,NET,40,PERCENT
 hantaowang/logstash-postgres,DISK,29,PERCENT
 hantaowang/logstash-postgres,MEMORY,47,PERCENT
-mysql:5.6.32,CPU-QUOTA,52,PERCENT
+mysql:5.6.32,CPU-QUOTA,45,PERCENT
 mysql:5.6.32,NET,31,PERCENT
 mysql:5.6.32,DISK,53,PERCENT
 mysql:5.6.32,MEMORY,55,PERCENT
@@ -23,7 +23,7 @@ haproxy:1.7,CPU-QUOTA,45,PERCENT
 haproxy:1.7,NET,30,PERCENT
 haproxy:1.7,DISK,20,PERCENT
 haproxy:1.7,MEMORY,19,PERCENT
-library/postgres:9.4,CPU-QUOTA,45,PERCENT
+library/postgres:9.4,CPU-QUOTA,40,PERCENT
 library/postgres:9.4,NET,19,PERCENT
 library/postgres:9.4,DISK,25,PERCENT
 library/postgres:9.4,MEMORY,55,PERCENT
