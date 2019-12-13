@@ -121,20 +121,20 @@ def explore_spearmint(workload_config, params):
 
 
 
-    workload_config["type"] = "node-app"
+    workload_config["type"] = "apt-app"
     masterNode = [master_node()]
     experiment_trials = int(workload_config['num_trials']) if 'num_trials' in workload_config else 1
-    service_names = ["node-app", "haproxy", "mongo"]
-    # service_names = ["elasticsearch", "kibana", "logstash", "mysql", "postgres", "node-apt-app", "haproxy"]
+    # service_names = ["node-app", "haproxy", "mongo"]
+    service_names = ["elasticsearch", "kibana", "logstash", "mysql", "postgres", "node-apt-app", "haproxy"]
     dct = ip_to_service_list(service_names)
     for ip in dct:
         if "haproxy" in dct[ip]:
             workload_config["frontend"] = [ip]
             break
 
-    service_index_dct = {"node-app": 0, "haproxy": 1, "mongo": 2}
-    # service_index_dct = {"node-apt-app": 0, "kibana": 1, "elasticsearch": 2, "logstash": 3, "mysql":4,
-                         # "haproxy": 5, "postgres":6}
+    # service_index_dct = {"node-app": 0, "haproxy": 1, "mongo": 2}
+    service_index_dct = {"node-apt-app": 0, "kibana": 1, "elasticsearch": 2, "logstash": 3, "mysql":4,
+                         "haproxy": 5, "postgres":6}
 
     # params["CPU-QUOTA"] = [40, 40, 40]
     # params["DISK"] = []
