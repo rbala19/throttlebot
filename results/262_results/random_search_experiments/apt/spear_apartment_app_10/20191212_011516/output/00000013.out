@@ -1,0 +1,153 @@
+Running in wrapper mode for '13'
+
+Running python job.
+
+[name: "CPU-QUOTA"
+int_val: 40
+int_val: 13
+int_val: 71
+int_val: 63
+int_val: 93
+int_val: 32
+int_val: 78
+, name: "DISK"
+int_val: 10
+int_val: 35
+int_val: 49
+int_val: 53
+int_val: 35
+int_val: 52
+int_val: 50
+, name: "MEMORY"
+int_val: 46
+int_val: 30
+int_val: 57
+int_val: 49
+int_val: 33
+int_val: 57
+int_val: 13
+, name: "NET"
+int_val: 20
+int_val: 19
+int_val: 50
+int_val: 34
+int_val: 23
+int_val: 49
+int_val: 28
+]
+The paramters are {u'CPU-QUOTA': array([40, 13, 71, 63, 93, 32, 78]), u'NET': array([20, 19, 50, 34, 23, 49, 28]), u'DISK': array([10, 35, 49, 53, 35, 52, 50]), u'MEMORY': array([46, 30, 57, 49, 33, 57, 13])}
+{'13.57.236.233': ['postgres', 'kibana'], '52.53.237.168': ['node-apt-app', 'kibana'], '13.57.232.190': ['elasticsearch', 'mysql'], '13.56.13.241': ['node-apt-app', 'logstash'], '13.57.58.49': ['haproxy', 'kibana'], '54.153.85.122': ['node-apt-app', 'kibana']}
+Setting cpu quota to 195000 out of 250000
+STRESSING VM_IP 13.57.236.233 AND CONTAINER fd4563743d87, NET 143360.0
+STRESSING VM_IP 13.57.236.233 AND CONTAINER fd4563743d87, DISK 41943040.0
+STRESSING VM_IP 13.57.236.233 AND CONTAINER fd4563743d87, MEMORY 487500000.0
+Recovering the memory utilization
+Setting cpu quota to 32500 out of 250000
+STRESSING VM_IP 13.57.236.233 AND CONTAINER 6cb395f9a474, NET 97280.0
+STRESSING VM_IP 13.57.236.233 AND CONTAINER 6cb395f9a474, DISK 29360128.0
+STRESSING VM_IP 13.57.236.233 AND CONTAINER 6cb395f9a474, MEMORY 1125000000.0
+Recovering the memory utilization
+Setting cpu quota to 100000 out of 250000
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 72bf70afc99a, NET 102400.0
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 72bf70afc99a, DISK 8388608.0
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 72bf70afc99a, MEMORY 1725000000.0
+Recovering the memory utilization
+Setting cpu quota to 32500 out of 250000
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 6a93346d70ee, NET 97280.0
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 6a93346d70ee, DISK 29360128.0
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 6a93346d70ee, MEMORY 1125000000.0
+Recovering the memory utilization
+Setting cpu quota to 177500 out of 250000
+STRESSING VM_IP 13.57.232.190 AND CONTAINER f914a2e03362, NET 256000.0
+STRESSING VM_IP 13.57.232.190 AND CONTAINER f914a2e03362, DISK 41104179.2
+STRESSING VM_IP 13.57.232.190 AND CONTAINER f914a2e03362, MEMORY 2137500000.0
+Recovering the memory utilization
+Setting cpu quota to 232500 out of 250000
+STRESSING VM_IP 13.57.232.190 AND CONTAINER c6bd985fa324, NET 117760.0
+STRESSING VM_IP 13.57.232.190 AND CONTAINER c6bd985fa324, DISK 29360128.0
+STRESSING VM_IP 13.57.232.190 AND CONTAINER c6bd985fa324, MEMORY 1237500000.0
+Recovering the memory utilization
+Setting cpu quota to 100000 out of 250000
+STRESSING VM_IP 13.56.13.241 AND CONTAINER f8b10d691b77, NET 102400.0
+STRESSING VM_IP 13.56.13.241 AND CONTAINER f8b10d691b77, DISK 8388608.0
+STRESSING VM_IP 13.56.13.241 AND CONTAINER f8b10d691b77, MEMORY 1725000000.0
+Recovering the memory utilization
+Setting cpu quota to 157500 out of 250000
+STRESSING VM_IP 13.56.13.241 AND CONTAINER 197dde384659, NET 174080.0
+STRESSING VM_IP 13.56.13.241 AND CONTAINER 197dde384659, DISK 44459622.4
+STRESSING VM_IP 13.56.13.241 AND CONTAINER 197dde384659, MEMORY 1837500000.0
+Recovering the memory utilization
+Setting cpu quota to 80000 out of 250000
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ce162cfce35f, NET 250880.0
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ce162cfce35f, DISK 43620761.6
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ce162cfce35f, MEMORY 2137500000.0
+Recovering the memory utilization
+Setting cpu quota to 32500 out of 250000
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ecf769a2a794, NET 97280.0
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ecf769a2a794, DISK 29360128.0
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ecf769a2a794, MEMORY 1125000000.0
+Recovering the memory utilization
+Setting cpu quota to 100000 out of 250000
+STRESSING VM_IP 54.153.85.122 AND CONTAINER f340b9f2855e, NET 102400.0
+STRESSING VM_IP 54.153.85.122 AND CONTAINER f340b9f2855e, DISK 8388608.0
+STRESSING VM_IP 54.153.85.122 AND CONTAINER f340b9f2855e, MEMORY 1725000000.0
+Recovering the memory utilization
+Setting cpu quota to 32500 out of 250000
+STRESSING VM_IP 54.153.85.122 AND CONTAINER 93ffc048982e, NET 97280.0
+STRESSING VM_IP 54.153.85.122 AND CONTAINER 93ffc048982e, DISK 29360128.0
+STRESSING VM_IP 54.153.85.122 AND CONTAINER 93ffc048982e, MEMORY 1125000000.0
+Recovering the memory utilization
+Using 1 trials
+Initializing Machines
+ab -p post.json -T application/json -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/psql/users/
+ab -p post.json -T application/json -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/mysql/users/
+Sleeping for 2 seconds
+ab -q -n 200 -c 50 -s 9999 -e results_file http://13.57.58.49:80/app/psql/users/ > output0.txt
+ab -q -p post.json -T application/json -n 200 -c 50 -s 9999 -e results_file http://13.57.58.49:80/app/psql/users/ > output1.txt
+ab -q -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/mysql/users/ > output2.txt
+ab -q -p post.json -T application/json -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/mysql/users/ > output3.txt
+ab -q -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/users/ > output4.txt
+ab -n 1 -s 9999 -e results_file http://13.57.58.49:80/app/elastic/users/3 > output5.txt
+Please ignore the following new lines (if any)
+7.08,7061.225,977.0,8689.0,15140.0
+11.18,4470.834,1215.0,8876.0,15117.0
+45.24,11052.846,3712.0,12076.0,13221.0
+45.87,10901.438,3602.0,12010.0,15161.0
+2760.19,181.147,137.0,218.0,239.0
+0.11,8761.078,-1,-1,-1
+total:2869.67,42428.568,12534.15574,44760.15574,61769.15574
+Sleeping for 15 seconds for proper deletion
+Sleeping for 5 more seconds for proper deletion
+Experiment results are {'latency_90': [44760.15574], 'latency': [42428.568], 'rps': [2869.67], 'latency_50': [12534.15574], 'latency_99': [61769.15574]}
+Got result 61769.155740
+
+----------------------------------------
+Problem running the job:
+(<class 'subprocess.CalledProcessError'>, CalledProcessError(), <traceback object at 0x113a126c8>)
+Traceback (most recent call last):
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/runner.py", line 42, in job_runner
+    elif job.language == PYTHON: run_python_job(job)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/runner.py", line 148, in run_python_job
+    save_job(job)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/helpers.py", line 72, in save_job
+    file_write_safe(filename, job.SerializeToString())
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/helpers.py", line 46, in file_write_safe
+    sh(cmd)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/helpers.py", line 19, in sh
+    subprocess.check_call(cmd, shell=True)
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/subprocess.py", line 540, in check_call
+    raise CalledProcessError(retcode, cmd)
+CalledProcessError: Command 'mv "/var/folders/0x/f3sy_kt92pbfpm7_jg_d1gqm0000gn/T/tmpRnrFcH" "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/bayOptSearch/jobs/00000013.pb"' returned non-zero exit status 1
+None
+----------------------------------------
+Process Process-325:
+Traceback (most recent call last):
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/multiprocessing/process.py", line 258, in _bootstrap
+    self.run()
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/multiprocessing/process.py", line 114, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/runner.py", line 62, in job_runner
+    job      = load_job(job_file)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/helpers.py", line 76, in load_job
+    fh = open(filename, 'rb')
+IOError: [Errno 2] No such file or directory: u'/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/bayOptSearch/jobs/00000013.pb'

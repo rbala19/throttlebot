@@ -1,0 +1,58 @@
+Running in wrapper mode for '1'
+
+Running python job.
+
+[name: "CPU-QUOTA"
+int_val: 47
+int_val: 19
+int_val: 77
+int_val: 55
+int_val: 73
+int_val: 85
+int_val: 31
+, name: "DISK"
+int_val: 14
+int_val: 41
+int_val: 13
+int_val: 32
+int_val: 40
+int_val: 24
+int_val: 36
+, name: "MEMORY"
+int_val: 67
+int_val: 27
+int_val: 69
+int_val: 13
+int_val: 21
+int_val: 38
+int_val: 53
+, name: "NET"
+int_val: 33
+int_val: 64
+int_val: 60
+int_val: 33
+int_val: 50
+int_val: 34
+int_val: 61
+]
+The paramters are {u'CPU-QUOTA': array([47, 19, 77, 55, 73, 85, 31]), u'NET': array([33, 64, 60, 33, 50, 34, 61]), u'DISK': array([14, 41, 13, 32, 40, 24, 36]), u'MEMORY': array([67, 27, 69, 13, 21, 38, 53])}
+{'13.57.236.233': ['postgres', 'kibana'], '52.53.237.168': ['node-apt-app', 'kibana'], '13.57.232.190': ['elasticsearch', 'mysql'], '13.56.13.241': ['node-apt-app', 'logstash'], '13.57.58.49': ['haproxy', 'kibana'], '54.153.85.122': ['node-apt-app', 'kibana']}
+Sum for NET is 125, which exceeds 120
+----------------------------------------
+Problem running the job:
+(<type 'exceptions.ZeroDivisionError'>, ZeroDivisionError('integer division or modulo by zero',), <traceback object at 0x115388e18>)
+Traceback (most recent call last):
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/runner.py", line 42, in job_runner
+    elif job.language == PYTHON: run_python_job(job)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/runner.py", line 142, in run_python_job
+    result = module.main(job.id, params)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/bayOptSearch/bayOpt.py", line 104, in main
+    return explore_spearmint(workload_config, params)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/bayOptSearch/bayOpt.py", line 162, in explore_spearmint
+    return 1/0
+ZeroDivisionError: integer division or modulo by zero
+None
+----------------------------------------
+Job file reloaded.
+Could not find value in output file.
+Job failed in 6.99 seconds.

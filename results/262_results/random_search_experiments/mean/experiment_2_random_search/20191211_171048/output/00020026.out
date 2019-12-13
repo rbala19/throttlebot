@@ -1,0 +1,73 @@
+Running in wrapper mode for '20026'
+
+Running python job.
+
+[name: "CPU-QUOTA"
+int_val: 61
+int_val: 62
+int_val: 34
+, name: "DISK"
+int_val: 17
+int_val: 30
+int_val: 43
+, name: "MEMORY"
+int_val: 14
+int_val: 23
+int_val: 27
+, name: "NET"
+int_val: 32
+int_val: 11
+int_val: 21
+]
+The paramters are {u'CPU-QUOTA': array([61, 62, 34]), u'NET': array([32, 11, 21]), u'DISK': array([17, 30, 43]), u'MEMORY': array([14, 23, 27])}
+{'54.183.145.77': ['node-app'], '54.215.222.76': ['haproxy', 'mongo']}
+Setting cpu quota to 152500 out of 250000
+Setting cpu quota to 152500 out of 250000
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2548060e4def, NET 163840.0
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2321bac01380, NET 163840.0
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2548060e4def, DISK 14260633.6
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2321bac01380, DISK 14260633.6
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2548060e4def, MEMORY 525000000.0
+Recovering the memory utilization
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2321bac01380, MEMORY 525000000.0
+Recovering the memory utilization
+Setting cpu quota to 155000 out of 250000
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 3ddec86a1dc1, NET 56320.0
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 3ddec86a1dc1, DISK 25165824.0
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 3ddec86a1dc1, MEMORY 862500000.0
+Recovering the memory utilization
+Setting cpu quota to 85000 out of 250000
+Setting cpu quota to 85000 out of 250000
+STRESSING VM_IP 54.215.222.76 AND CONTAINER ebafb44c4212, NET 107520.0
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 28a23a4bfd32, NET 107520.0
+STRESSING VM_IP 54.215.222.76 AND CONTAINER ebafb44c4212, DISK 36071014.4
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 28a23a4bfd32, DISK 36071014.4
+STRESSING VM_IP 54.215.222.76 AND CONTAINER ebafb44c4212, MEMORY 1012500000.0
+Recovering the memory utilization
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 28a23a4bfd32, MEMORY 1012500000.0
+Recovering the memory utilization
+Using 1 trials
+13.57.212.78
+ab -p post.json -T application/json -n 350 -c 150 -q -e results_file http://54.215.222.76/api/todos > output.txt && echo Done
+Successfully cleared? Cleared entries! 1
+
+{'latency_90': [2435.0], 'latency': [685073.55], 'rps': [76.63], 'latency_50': [1225.0], 'latency_99': [2793.0]}
+Experiment results are {'latency_90': [2435.0], 'latency': [685073.55], 'rps': [76.63], 'latency_50': [1225.0], 'latency_99': [2793.0]}
+Got result 2793.000000
+
+Job file reloaded.
+Completed successfully in 32.86 seconds. [2793.000000]
+setting job 20026 complete
+Process Process-566:
+Traceback (most recent call last):
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/multiprocessing/process.py", line 258, in _bootstrap
+    self.run()
+  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/multiprocessing/process.py", line 114, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/runner.py", line 76, in job_runner
+    job.value, duration)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/ExperimentGrid.py", line 55, in job_complete
+    expt_grid.set_complete(id, value, duration)
+  File "/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/spearmint/ExperimentGrid.py", line 165, in set_complete
+    self.status[id] = COMPLETE_STATE
+IndexError: index 20026 is out of bounds for axis 0 with size 20000

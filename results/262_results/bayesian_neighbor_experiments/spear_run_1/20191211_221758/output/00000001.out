@@ -1,0 +1,127 @@
+Running in wrapper mode for '1'
+
+Running python job.
+
+[name: "CPU-QUOTA"
+int_val: 12
+int_val: 30
+int_val: 42
+int_val: 12
+int_val: 64
+int_val: 95
+int_val: 95
+, name: "DISK"
+int_val: 26
+int_val: 38
+int_val: 20
+int_val: 12
+int_val: 13
+int_val: 30
+int_val: 15
+, name: "MEMORY"
+int_val: 18
+int_val: 58
+int_val: 35
+int_val: 45
+int_val: 11
+int_val: 54
+int_val: 16
+, name: "NET"
+int_val: 49
+int_val: 41
+int_val: 34
+int_val: 18
+int_val: 51
+int_val: 14
+int_val: 12
+]
+The paramters are {u'CPU-QUOTA': array([12, 30, 42, 12, 64, 95, 95]), u'NET': array([49, 41, 34, 18, 51, 14, 12]), u'DISK': array([26, 38, 20, 12, 13, 30, 15]), u'MEMORY': array([18, 58, 35, 45, 11, 54, 16])}
+{'13.57.236.233': ['postgres', 'kibana'], '52.53.237.168': ['node-apt-app', 'kibana'], '13.57.232.190': ['elasticsearch', 'mysql'], '13.56.13.241': ['node-apt-app', 'logstash'], '13.57.58.49': ['haproxy', 'kibana'], '54.153.85.122': ['node-apt-app', 'kibana']}
+Setting cpu quota to 237500 out of 250000
+STRESSING VM_IP 13.57.236.233 AND CONTAINER fd4563743d87, NET 61440.0
+STRESSING VM_IP 13.57.236.233 AND CONTAINER fd4563743d87, DISK 12582912.0
+STRESSING VM_IP 13.57.236.233 AND CONTAINER fd4563743d87, MEMORY 600000000.0
+Recovering the memory utilization
+Setting cpu quota to 75000 out of 250000
+STRESSING VM_IP 13.57.236.233 AND CONTAINER 6cb395f9a474, NET 209920.0
+STRESSING VM_IP 13.57.236.233 AND CONTAINER 6cb395f9a474, DISK 31876710.4
+STRESSING VM_IP 13.57.236.233 AND CONTAINER 6cb395f9a474, MEMORY 2175000000.0
+Recovering the memory utilization
+Setting cpu quota to 30000 out of 250000
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 72bf70afc99a, NET 250880.0
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 72bf70afc99a, DISK 21810380.8
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 72bf70afc99a, MEMORY 675000000.0
+Recovering the memory utilization
+Setting cpu quota to 75000 out of 250000
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 6a93346d70ee, NET 209920.0
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 6a93346d70ee, DISK 31876710.4
+STRESSING VM_IP 52.53.237.168 AND CONTAINER 6a93346d70ee, MEMORY 2175000000.0
+Recovering the memory utilization
+Setting cpu quota to 105000 out of 250000
+STRESSING VM_IP 13.57.232.190 AND CONTAINER f914a2e03362, NET 174080.0
+STRESSING VM_IP 13.57.232.190 AND CONTAINER f914a2e03362, DISK 16777216.0
+STRESSING VM_IP 13.57.232.190 AND CONTAINER f914a2e03362, MEMORY 1312500000.0
+Recovering the memory utilization
+Setting cpu quota to 160000 out of 250000
+STRESSING VM_IP 13.57.232.190 AND CONTAINER c6bd985fa324, NET 261120.0
+STRESSING VM_IP 13.57.232.190 AND CONTAINER c6bd985fa324, DISK 10905190.4
+STRESSING VM_IP 13.57.232.190 AND CONTAINER c6bd985fa324, MEMORY 412500000.0
+Recovering the memory utilization
+Setting cpu quota to 30000 out of 250000
+STRESSING VM_IP 13.56.13.241 AND CONTAINER f8b10d691b77, NET 250880.0
+STRESSING VM_IP 13.56.13.241 AND CONTAINER f8b10d691b77, DISK 21810380.8
+STRESSING VM_IP 13.56.13.241 AND CONTAINER f8b10d691b77, MEMORY 675000000.0
+Recovering the memory utilization
+Setting cpu quota to 30000 out of 250000
+STRESSING VM_IP 13.56.13.241 AND CONTAINER 197dde384659, NET 92160.0
+STRESSING VM_IP 13.56.13.241 AND CONTAINER 197dde384659, DISK 10066329.6
+STRESSING VM_IP 13.56.13.241 AND CONTAINER 197dde384659, MEMORY 1687500000.0
+Recovering the memory utilization
+Setting cpu quota to 237500 out of 250000
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ce162cfce35f, NET 71680.0
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ce162cfce35f, DISK 25165824.0
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ce162cfce35f, MEMORY 2025000000.0
+Recovering the memory utilization
+Setting cpu quota to 75000 out of 250000
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ecf769a2a794, NET 209920.0
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ecf769a2a794, DISK 31876710.4
+STRESSING VM_IP 13.57.58.49 AND CONTAINER ecf769a2a794, MEMORY 2175000000.0
+Recovering the memory utilization
+Setting cpu quota to 30000 out of 250000
+STRESSING VM_IP 54.153.85.122 AND CONTAINER f340b9f2855e, NET 250880.0
+STRESSING VM_IP 54.153.85.122 AND CONTAINER f340b9f2855e, DISK 21810380.8
+STRESSING VM_IP 54.153.85.122 AND CONTAINER f340b9f2855e, MEMORY 675000000.0
+Recovering the memory utilization
+Setting cpu quota to 75000 out of 250000
+STRESSING VM_IP 54.153.85.122 AND CONTAINER 93ffc048982e, NET 209920.0
+STRESSING VM_IP 54.153.85.122 AND CONTAINER 93ffc048982e, DISK 31876710.4
+STRESSING VM_IP 54.153.85.122 AND CONTAINER 93ffc048982e, MEMORY 2175000000.0
+Recovering the memory utilization
+Using 1 trials
+Initializing Machines
+ab -p post.json -T application/json -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/psql/users/
+ab -p post.json -T application/json -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/mysql/users/
+Sleeping for 2 seconds
+ab -q -n 200 -c 50 -s 9999 -e results_file http://13.57.58.49:80/app/psql/users/ > output0.txt
+ab -q -p post.json -T application/json -n 200 -c 50 -s 9999 -e results_file http://13.57.58.49:80/app/psql/users/ > output1.txt
+ab -q -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/mysql/users/ > output2.txt
+ab -q -p post.json -T application/json -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/mysql/users/ > output3.txt
+ab -q -n 800 -c 500 -s 9999 -e results_file http://13.57.58.49:80/app/users/ > output4.txt
+ab -n 1 -s 9999 -e results_file http://13.57.58.49:80/app/elastic/users/3 > output5.txt
+Please ignore the following new lines (if any)
+4.47,11195.091,1995.0,35277.0,39012.0
+4.57,10948.578,1408.0,34446.0,40538.0
+15.6,32059.932,8231.0,42034.0,45306.0
+15.66,31932.645,11561.0,43560.0,45552.0
+625.27,799.65,438.0,543.0,662.0
+0.03,30829.089,-1,-1,-1
+total:665.6,117764.985,33806.59937,166033.59937,181243.59937
+Sleeping for 15 seconds for proper deletion
+Sleeping for 5 more seconds for proper deletion
+Experiment results are {'latency_90': [166033.59937], 'latency': [117764.98499999999], 'rps': [665.5999999999999], 'latency_50': [33806.599369999996], 'latency_99': [181243.59937]}
+Got result 181243.599370
+
+Job file reloaded.
+Completed successfully in 145.11 seconds. [181243.599370]
+setting job 1 complete
+set...

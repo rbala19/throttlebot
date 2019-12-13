@@ -1,0 +1,61 @@
+Running in wrapper mode for '19261'
+
+Running python job.
+
+[name: "CPU-QUOTA"
+int_val: 75
+int_val: 12
+int_val: 31
+, name: "DISK"
+int_val: 21
+int_val: 24
+int_val: 16
+, name: "MEMORY"
+int_val: 39
+int_val: 41
+int_val: 32
+, name: "NET"
+int_val: 47
+int_val: 31
+int_val: 34
+]
+The paramters are {u'CPU-QUOTA': array([75, 12, 31]), u'NET': array([47, 31, 34]), u'DISK': array([21, 24, 16]), u'MEMORY': array([39, 41, 32])}
+{'54.183.145.77': ['node-app'], '54.215.222.76': ['haproxy', 'mongo']}
+Setting cpu quota to 187500 out of 250000
+Setting cpu quota to 187500 out of 250000
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2548060e4def, NET 240640.0
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2321bac01380, NET 240640.0
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2548060e4def, DISK 17616076.8
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2321bac01380, DISK 17616076.8
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2548060e4def, MEMORY 1462500000.0
+Recovering the memory utilization
+STRESSING VM_IP 54.183.145.77 AND CONTAINER 2321bac01380, MEMORY 1462500000.0
+Recovering the memory utilization
+Setting cpu quota to 30000 out of 250000
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 3ddec86a1dc1, NET 158720.0
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 3ddec86a1dc1, DISK 20132659.2
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 3ddec86a1dc1, MEMORY 1537500000.0
+Recovering the memory utilization
+Setting cpu quota to 77500 out of 250000
+Setting cpu quota to 77500 out of 250000
+STRESSING VM_IP 54.215.222.76 AND CONTAINER ebafb44c4212, NET 174080.0
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 28a23a4bfd32, NET 174080.0
+STRESSING VM_IP 54.215.222.76 AND CONTAINER ebafb44c4212, DISK 13421772.8
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 28a23a4bfd32, DISK 13421772.8
+STRESSING VM_IP 54.215.222.76 AND CONTAINER ebafb44c4212, MEMORY 1200000000.0
+Recovering the memory utilization
+STRESSING VM_IP 54.215.222.76 AND CONTAINER 28a23a4bfd32, MEMORY 1200000000.0
+Recovering the memory utilization
+Using 1 trials
+13.57.212.78
+ab -p post.json -T application/json -n 350 -c 150 -q -e results_file http://54.215.222.76/api/todos > output.txt && echo Done
+Successfully cleared? Cleared entries! 1
+
+{'latency_90': [1988.0], 'latency': [595761.6], 'rps': [88.12], 'latency_50': [1253.0], 'latency_99': [2257.0]}
+Experiment results are {'latency_90': [1988.0], 'latency': [595761.6], 'rps': [88.12], 'latency_50': [1253.0], 'latency_99': [2257.0]}
+Got result 2257.000000
+
+Job file reloaded.
+Completed successfully in 29.14 seconds. [2257.000000]
+setting job 19261 complete
+set...

@@ -1,0 +1,35 @@
+Best result: 22091.854200
+Job-id: 20010
+Parameters: 
+name: "CPU-QUOTA"
+int_val: 86
+int_val: 32
+int_val: 53
+int_val: 46
+int_val: 52
+int_val: 58
+int_val: 60
+name: "DISK"
+int_val: 47
+int_val: 43
+int_val: 45
+int_val: 38
+int_val: 40
+int_val: 24
+int_val: 41
+name: "MEMORY"
+int_val: 46
+int_val: 31
+int_val: 43
+int_val: 58
+int_val: 28
+int_val: 29
+int_val: 15
+name: "NET"
+int_val: 51
+int_val: 43
+int_val: 42
+int_val: 31
+int_val: 36
+int_val: 37
+int_val: 38
