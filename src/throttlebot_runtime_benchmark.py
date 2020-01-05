@@ -57,6 +57,12 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
                     result_list.append(data)
 
+                    with open("/Users/rahulbalakrishnan/Desktop/data/tbot_threshold/{}"
+                                      .format(date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
+                        str_data = json.dumps({"results": result_list, "polling_frequency": polling_frequency,
+                                               "duration": duration})
+                        f.write(str_data)
+
                 else:
                     time.sleep(min(2, polling_frequency))
             except Exception as e:
@@ -70,15 +76,15 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
         ps.kill()
 
 
+    if num_iterations > 1:
+        threshold_date_time = datetime.now()
+        with open("/Users/rahulbalakrishnan/Desktop/data/tbot_threshold/cumulative-{}"
+                          .format(threshold_date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
+            str_data = json.dumps({"results": outer_result_list, "polling_frequency": polling_frequency, "duration": duration})
+            f.write(str_data)
 
-    threshold_date_time = datetime.now()
-    with open("/Users/rahulbalakrishnan/Desktop/data/tbot_threshold/{}"
-                      .format(threshold_date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
-        str_data = json.dumps({"results": outer_result_list, "polling_frequency": polling_frequency, "duration": duration})
-        f.write(str_data)
 
 
-
-run(num_iterations=1, time_to_beat=1000000, duration=35*60, polling_frequency=30)
+run(num_iterations=1, time_to_beat=1000000, duration=9*60*60, polling_frequency=30)
 
 

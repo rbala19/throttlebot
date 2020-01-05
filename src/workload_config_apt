@@ -16,14 +16,14 @@ rerun_baseline = False
 nimr_squeeze_only = False
 num_iterations = 20
 error_tolerance = 0.1
-setting_mode = cloud
-fill_services_first =
+setting_mode = prem
+fill_services_first = tsaianson/node-apt-app
 
 [Workload]
 
 type = apt-app
-frontend = 13.57.50.136
-request_generator = 13.57.241.130
+frontend = 13.56.114.130
+request_generator = 13.57.195.155
 additional_args =
 additional_arg_values =
 tbot_metric = latency_99
@@ -34,8 +34,8 @@ workload_num = 3
 
 [Filter]
 
-filter_policy =
+filter_policy = pipeline
 stress_amount = -50
 pipeline_services = RANDOM
 filter_exp_trials = 1
-pipeline_partitions = 4
+pipeline_partitions = 6
