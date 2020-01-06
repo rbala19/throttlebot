@@ -16,8 +16,8 @@ rerun_baseline = False
 nimr_squeeze_only = False
 num_iterations = 20
 error_tolerance = 0.1
-setting_mode = prem
-fill_services_first = tsaianson/node-apt-app
+setting_mode = cloud
+fill_services_first =
 
 [Workload]
 

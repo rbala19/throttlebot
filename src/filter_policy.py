@@ -134,13 +134,13 @@ def apply_pipeline_filter(redis_db,
         experiment_results = measure_runtime(workload_config, experiment_trials)
         exp_mean = mean_list(experiment_results[tbot_metric])
 
-        if minSoFar and exp_mean < minSoFar and exp_mean:
-            logging.info("Mean result is {}".format(exp_mean))
-            minSoFar = exp_mean
-            now = time.time()
-            with open("best_results", "a") as f:
-                f.write("Beat Time-to-beat with these stats: {}\n".format([exp_mean, experiment_iteration,
-                                                                           -1]))
+        # if minSoFar and exp_mean < minSoFar and exp_mean:
+        #     logging.info("Mean result is {}".format(exp_mean))
+        #     minSoFar = exp_mean
+        #     now = time.time()
+        #     with open("best_results", "a") as f:
+        #         f.write("Beat Time-to-beat with these stats: {}\n".format([exp_mean, experiment_iteration,
+        #                                                                    -1]))
 
         repr_str = str(pipeline_index)
         tbot_datastore.write_filtered_results(redis_db,
