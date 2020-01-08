@@ -65,7 +65,7 @@ def write_redis_ranking(redis_db, experiment_iteration_count, perf_metric, mean_
 def get_top_n_mimr(redis_db, experiment_iteration_count, perf_metric, stress_weight, gradient_mode, optimize_for_lowest=True, num_results_returned=-1):
     if gradient_mode == 'inverted':
         optimize_for_lowest = not optimize_for_lowest
-        
+
     sorted_set_name = generate_ordered_performance_key(experiment_iteration_count, perf_metric, stress_weight)
     logging.info('Recovering the MIMR from {}'.format(sorted_set_name))
 
@@ -131,7 +131,7 @@ Currently assuming that there is only a single metric that a user would care abo
 Elapsed time is in seconds
 '''
 
-def write_summary_redis(redis_db, experiment_iteration_count, mimr, perf_gain, action_taken, analytic_perf, current_perf, current_perf_std, elapsed_time, cumm_mr, is_backtrack=False):
+def write_summary_redis(redis_db, experiment_iteration_count, mimr, perf_gain, action_taken, analytic_perf, current_perf, current_perf_std, elapsed_time, cumm_mr, is_backtrack=False, all_results=[]):
     action_taken_str = ''
     for mr in action_taken:
         action_taken_str += 'MR {} changed by {},'.format(mr.to_string(), action_taken[mr])
@@ -146,7 +146,12 @@ def write_summary_redis(redis_db, experiment_iteration_count, mimr, perf_gain, a
     redis_db.hset(hash_name, 'cumulative_mr', cumm_mr)
     redis_db.hset(hash_name, 'analytic_perf', analytic_perf)
     redis_db.hset(hash_name, 'is_backtrack', str(is_backtrack))
-    logging.info('Summary of Iteration {} written to redis'.format(experiment_iteration_count))
+    trial_num = 0
+    for result in all_results:
+        trial_str = 'trial{}_perf'.format(trial_num)
+        redis_db.hset(hash_name, trial_str, result)
+
+    print 'Summary of Iteration {} written to redis'.format(experiment_iteration_count)
 
 def read_summary_redis(redis_db, experiment_iteration_count):
     hash_name = '{}summary'.format(experiment_iteration_count)

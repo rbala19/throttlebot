@@ -713,8 +713,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                                            {},
                                            mean_list(current_performance[preferred_performance_metric]),
                                            mean_list(current_performance[preferred_performance_metric]),
-                                           np.std(np.array(current_performance[preferred_performance_metric])),
-                                           time_delta.seconds, 0)
+                                           np.std(np.array(current_performance[preferred_performance_metric])), 
+                                           time_delta.seconds, 0,
+                                           all_results=current_performance[preferred_performance_metric])
 
     logging.info('============================================')
     logging.info('\n' * 2)
@@ -951,7 +952,8 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         tbot_datastore.write_summary_redis(redis_db, experiment_count, effective_mimr,
                                            performance_improvement, action_taken,
                                            analytic_mean, improved_mean, improved_std,
-                                           time_delta.seconds, cumulative_mr_count)
+                                           time_delta.seconds, cumulative_mr_count,
+                                           all_results=simulated_performance[preferred_performance_metric])
 
         current_performance = improved_performance
 
@@ -1181,8 +1183,8 @@ def backtrack_overstep(redis_db, workload_config, experiment_count,
             new_action[mr] = median_alloc - new_mr_alloc
             tbot_datastore.write_summary_redis(redis_db, experiment_count, mr,
                                                perf_improvement, new_action,
-                                               median_alloc_mean, median_alloc_mean, median_alloc_std,
-                                               0, 0, is_backtrack=True)
+                                               median_alloc_mean, median_alloc_mean, median_alloc_std, 
+                                               0, 0, is_backtrack=True, all_results=median_alloc_perf[metric])
 
             results = tbot_datastore.read_summary_redis(redis_db, experiment_count)
             logging.info('Results from backtrack are {}'.format(results))
