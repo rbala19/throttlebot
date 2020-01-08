@@ -45,7 +45,7 @@ Signal Handler
 '''
 class GracefulKiller:
     redis_db = None
-    
+
     def __init__(self, redis_db):
         self.redis_db = redis_db
         signal.signal(signal.SIGINT, self.exit_gracefully)
@@ -367,7 +367,7 @@ def create_decrease_nimr_schedule(redis_db, imr, nimr_list, stress_weight, targe
     assert new_vm_removal == min_vm_removal
     nimr_reduction = new_nimr_reduction
     min_vm_removal = new_vm_removal
-            
+
     machine_to_imr = containers_per_vm(imr)
     max_imr_containers = max([machine_to_imr[machine_ip] for machine_ip in machine_to_imr])
     proposed_imr_improvement = abs(min_vm_removal) / max_imr_containers
@@ -385,7 +385,7 @@ def determine_reallocation(redis_db, colocated_nimr_list, vm_to_nimr, imr,
     for deployment in imr.instances:
         vm_ip,_ = deployment
         vm_to_removal[vm_ip] = 0
-        
+
     min_vm_removal = 0
     nimr_reduction = {}
     for nimr in colocated_nimr_list:
@@ -713,6 +713,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                                            {},
                                            mean_list(current_performance[preferred_performance_metric]),
                                            mean_list(current_performance[preferred_performance_metric]),
+                                           np.std(np.array(current_performance[preferred_performance_metric])),
                                            time_delta.seconds, 0)
 
     logging.info('============================================')
@@ -731,7 +732,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         num_iterations = 2
 
 
-        
+
     # Modified while condition for completion
     while experiment_count < num_iterations:
         # Calculate the analytic baseline that is used to determine MRs
@@ -916,6 +917,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             simulated_performance = measure_runtime(workload_config, baseline_trials)
             simulated_performance[preferred_performance_metric] = remove_outlier(simulated_performance[preferred_performance_metric])
             simulated_mean = mean_list(simulated_performance[preferred_performance_metric])
+            simulated_std = np.std(np.array(simulated_performance[preferred_performance_metric]))
 
             current_perf_mean = mean_list(current_performance[preferred_performance_metric])
             is_perf_improved = is_performance_improved(current_perf_mean, simulated_mean, optimize_for_lowest, within_x=error_tolerance)
@@ -941,13 +943,14 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         # Test the new performance after potential resource stealing
         improved_performance = simulated_performance
         improved_mean = simulated_mean
+        improved_std = simulated_std
         previous_mean = mean_list(current_performance[preferred_performance_metric])
         performance_improvement = simulated_mean - previous_mean
 
         # Write a summary of the experiment's iterations to Redis
         tbot_datastore.write_summary_redis(redis_db, experiment_count, effective_mimr,
                                            performance_improvement, action_taken,
-                                           analytic_mean, improved_mean,
+                                           analytic_mean, improved_mean, improved_std,
                                            time_delta.seconds, cumulative_mr_count)
 
         current_performance = improved_performance
@@ -988,7 +991,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             baseline_trials += 5
             sys_config['baseline_trials'] = baseline_trials
             sys_config['trials'] = experiment_trials
-            
+
             logging.info('Net performance improvement reported as 0, so initiating a backtrack step')
             new_performance = backtrack_overstep(redis_db,
                                                  workload_config,
@@ -1111,7 +1114,7 @@ def squeeze_nimrs(redis_db, sys_config,
         if valid_change is False:
             if valid_change_amount == 0:
                 continue
-            
+
         new_alloc = current_nimr_alloc + valid_change_amount
         set_mr_provision_detect_id_change(redis_db, nimr, new_alloc, None)
 
@@ -1163,8 +1166,9 @@ def backtrack_overstep(redis_db, workload_config, experiment_count,
         median_alloc_perf = measure_runtime(workload_config, experiment_count)
         if len(median_alloc_perf[metric]) == 0:
             return None
-        
+
         median_alloc_mean = mean_list(median_alloc_perf[metric])
+        median_alloc_std = np.std(np.array(median_alloc_perf[metric]))
 
 
         # If the median alloc performance is better, rewind the improvement back to this point
@@ -1177,7 +1181,7 @@ def backtrack_overstep(redis_db, workload_config, experiment_count,
             new_action[mr] = median_alloc - new_mr_alloc
             tbot_datastore.write_summary_redis(redis_db, experiment_count, mr,
                                                perf_improvement, new_action,
-                                               median_alloc_mean, median_alloc_mean,
+                                               median_alloc_mean, median_alloc_mean, median_alloc_std,
                                                0, 0, is_backtrack=True)
 
             results = tbot_datastore.read_summary_redis(redis_db, experiment_count)
@@ -1487,7 +1491,7 @@ def fake_run(config_file, mr_allocation):
     workload_config['frontend'] = [services['haproxy:1.7'][0][0]]
     print "Retrieving frontend:", workload_config['frontend']
     print "Retrieving request_generator:", workload_config['request_generator']
-    
+
     r = run(sys_config, workload_config, filter_config, mr_allocation, 0, fake=True)
     return r
 
@@ -1532,14 +1536,14 @@ if __name__ == "__main__":
         logging.info(workload_config)
     elif workload_config['type'] == 'apt-app':
         all_vm_ip = get_actual_vms()
-        workload_config['request_generator'] = [get_master()]        
+        workload_config['request_generator'] = [get_master()]
         services = get_service_placements(all_vm_ip)
         workload_config['frontend'] = [services['haproxy:1.7'][0][0]]
         print "Retrieving frontend:", workload_config['frontend']
         print "Retrieving request_generator:", workload_config['request_generator']
- 
+
     experiment_start = time.time()
-    
+
     run(sys_config, workload_config, filter_config, mr_allocation, args.last_completed_iter, time_to_beat=args.time_to_beat)
     experiment_end = time.time()
 
