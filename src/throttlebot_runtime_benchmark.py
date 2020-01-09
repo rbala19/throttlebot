@@ -13,7 +13,7 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
     for _ in range(num_iterations):
 
         date_time = datetime.now()
-        file_name = ("/home/ubuntu/data/tbotExperiment-{}".format(date_time.strftime("%m-%d-%Y-%H-%M-%S")))
+        file_name = ("/home/ubuntu/data/experiments/tbotExperiment-{}".format(date_time.strftime("%m-%d-%Y-%H-%M-%S")))
         subprocess.Popen(shlex.split("mkdir {}".format(file_name)))
 
 
