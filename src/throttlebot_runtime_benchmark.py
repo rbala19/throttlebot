@@ -78,7 +78,7 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
     if num_iterations > 1:
         threshold_date_time = datetime.now()
-        with open("~/data/tbot_threshold/cumulative-{}"
+        with open("/home/ubuntu/data/tbot_threshold/cumulative-{}"
                           .format(threshold_date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
             str_data = json.dumps({"results": outer_result_list, "polling_frequency": polling_frequency, "duration": duration})
             f.write(str_data)
