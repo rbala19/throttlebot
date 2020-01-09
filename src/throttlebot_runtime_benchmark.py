@@ -85,6 +85,6 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
 
 
-run(num_iterations=1, time_to_beat=1000000, duration=9*60*60, polling_frequency=30)
+run(num_iterations=1, time_to_beat=1000000, duration=200*60*60, polling_frequency=30)
 
 
