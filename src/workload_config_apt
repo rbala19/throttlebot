@@ -1,6 +1,6 @@
 [Basic]
 
-baseline_trials = 1
+baseline_trials = 5
 trials = 5
 stress_weight = -50
 improve_weight = 50
@@ -22,8 +22,8 @@ fill_services_first =
 [Workload]
 
 type = apt-app
-frontend = 18.144.44.65
-request_generator = 13.57.197.235
+frontend = 13.56.212.146
+request_generator = 54.219.164.210
 additional_args =
 additional_arg_values =
 tbot_metric = latency_99
