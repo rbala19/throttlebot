@@ -1,0 +1,41 @@
+[Basic]
+
+baseline_trials = 1
+trials = 5
+stress_weight = -50
+improve_weight = 50
+stress_these_resources = CPU-QUOTA,DISK,NET,MEMORY
+stress_these_services = hantaowang/hotrod-mapper:log,haproxy:1.7,hantaowang/hotrod-mapper:log,library/postgres:9.4,hantaowang/hotrod-seed,hantaowang/hotrod-customer:log,hantaowang/hotrod-route:log,hantaowang/hotrod-api:log hantaowang/hotrod-driver:log
+stress_these_machines = *
+redis_host = localhost
+stress_policy = ALL
+machine_type = c4.large
+quilt_overhead = 10
+gradient_mode = single
+rerun_baseline = False
+nimr_squeeze_only = False
+num_iterations = 20
+error_tolerance = 0.1
+setting_mode = cloud
+fill_services_first =
+
+[Workload]
+
+type = hotrod
+frontend = 54.215.136.88
+request_generator = 13.57.198.217
+additional_args =
+additional_arg_values =
+tbot_metric = latency_99
+optimize_for_lowest = True
+performance_target = 10
+include_warmup = False
+workload_num = 3
+
+[Filter]
+
+filter_policy = pipeline
+stress_amount = -50
+pipeline_services = RANDOM
+filter_exp_trials = 1
+pipeline_partitions = 6
