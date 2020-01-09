@@ -57,7 +57,7 @@ def write_redis_ranking(redis_db, experiment_iteration_count, perf_metric, mean_
     logging.info('SortedSetName: {}'.format(sorted_set_name))
 
     mr_key = generate_hash_key(experiment_iteration_count, mr, perf_metric)
-    redis_db.zadd(sorted_set_name, {mr_key: mean_result}, nx=True)
+    redis_db.zadd(sorted_set_name, mean_result, mr_key, nx=True)
     logging.info("Length of ranking now is {}".format(len(redis_db.zrange(sorted_set_name, 0, -1, desc=False, withscores=True))))
 
 # Redis sets are ordered from lowest score to the highest score
