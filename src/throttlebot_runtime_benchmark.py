@@ -57,7 +57,7 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
                     result_list.append(data)
 
-                    with open("~/data/tbot_threshold/{}"
+                    with open("/home/ubuntu/data/tbot_threshold/{}"
                                       .format(date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
                         str_data = json.dumps({"results": result_list, "polling_frequency": polling_frequency,
                                                "duration": duration})
