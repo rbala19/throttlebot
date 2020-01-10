@@ -22,12 +22,10 @@ def read_summary_redis(redis_db, experiment_iteration_count, trial_count):
 result_to_write = {}
 iter_count = 0
 while True:
-    try:
-        result_to_write[iter_count] = read_summary_redis(redis_db, iter_count, 5)
-        iter_count += 1
-    except:
+    result_to_write[iter_count] = read_summary_redis(redis_db, iter_count, 5)
+    if result_to_write[iter_count]["current_perf"] == None:
         break
-
+    iter_count += 1
 
 
 with open("redis_dump", "w") as f:
