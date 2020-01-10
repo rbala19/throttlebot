@@ -786,14 +786,14 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             with open(os.path.join(most_recent_folder, "logger-iteration{}".format(experiment_count)), 'a') as f:
                 f.write("{}:{} = {}\n".format(mr.to_string(), current_mr_allocation, mean_result))
 
-            if mean_result < min_so_far and mean_result:
-                logging.info("Mean result is {}".format(mean_result))
-                logging.info("time to beat is {}".format(time_to_beat))
-                min_so_far = mean_result
-                now = time.time()
-                with open("best_results", "a") as f:
-                    f.write("Beat Time-to-beat with these stats: {}\n".format([mean_result, experiment_count,
-                                                                       now - time_start_secs]))
+            # if mean_result < min_so_far and mean_result:
+            #     logging.info("Mean result is {}".format(mean_result))
+            #     logging.info("time to beat is {}".format(time_to_beat))
+            #     min_so_far = mean_result
+            #     now = time.time()
+            #     with open("best_results", "a") as f:
+            #         f.write("Beat Time-to-beat with these stats: {}\n".format([mean_result, experiment_count,
+            #                                                            now - time_start_secs]))
 
 
 

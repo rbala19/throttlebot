@@ -22,9 +22,11 @@ def read_summary_redis(redis_db, experiment_iteration_count, trial_count):
 result_to_write = {}
 iter_count = 0
 while True:
-    result_to_write[iter_count] = read_summary_redis(redis_db, iter_count, 5)
-    if result_to_write[iter_count]["current_perf"] == None:
+    dict_result = read_summary_redis(redis_db, iter_count, 5)
+    if dict_result["current_perf"] == None:
         break
+    else:
+        result_to_write[iter_count] = dict_result
     iter_count += 1
 
 
