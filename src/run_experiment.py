@@ -51,6 +51,7 @@ def collect_percentiles(filename, traffic_client):
             print result_float
         except:
             result_float = -1
+        print("percentile is {}".format(percentile))
         percentile_perf[percentile] = result_float
 
     return percentile_perf
@@ -577,6 +578,7 @@ def measure_apt_app(workload_config, experiment_iterations):
             latency += float(execute_parse_results(traffic_client, latency_cmd))
 
             percentile_perf = collect_percentiles('percentile{}'.format(c), traffic_client)
+            print(percentile_perf)
             for percentile in percentile_perf:
                 if percentile_perf[percentile] == -1:
                     latency_p['l{}'.format(percentile)] += percentile_perf[100] * 0.33
