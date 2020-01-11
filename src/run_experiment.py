@@ -638,7 +638,7 @@ def measure_apt_app(workload_config, experiment_iterations):
         # exit()
 
         for percentile in latency_p:
-            all_requests['l{}'.format(percentile)].append(latency_p[percentile])
+            all_requests['{}'.format(percentile)].append(latency_p[percentile])
 
     # Remove outliers (all outside of 1 standard deviation)
     if experiment_iterations > 1:
