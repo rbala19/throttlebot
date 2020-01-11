@@ -1,7 +1,7 @@
 [Basic]
 
-baseline_trials = 5
-trials = 5
+baseline_trials = 1
+trials = 1
 stress_weight = -50
 improve_weight = 50
 stress_these_resources = CPU-QUOTA,DISK,NET,MEMORY
