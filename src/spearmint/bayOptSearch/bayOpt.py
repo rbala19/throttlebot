@@ -119,12 +119,47 @@ def explore_spearmint(workload_config, params):
     # Set all fields using params object
 
 
+    #hardcoded checks
+    resource_types = ["CPU-QUOTA", "MEMORY", "NET", "DISK"]
+    #Machine 1
+    for type in resource_types:
+        benchmark = 120
+        if type == "CPU-QUOTA":
+            benchmark = 200
+        if params[type][3] + params[type][1] + params[type][0] > benchmark:
+            print("Type is {} and machine is {}".format(type, 1))
+            return 1/0
+    #Machine 2
+    for type in resource_types:
+        benchmark = 120
+        if type == "CPU-QUOTA":
+            benchmark = 200
+        if params[type][1] + params[type][0] + params[type][2] > benchmark:
+            print("Type is {} and machine is {}".format(type, 2))
+            return 1/0
+    #Machine 3
+    for type in resource_types:
+        benchmark = 120
+        if type == "CPU-QUOTA":
+            benchmark = 200
+        if params[type][1] + params[type][6] + params[type][4] > benchmark:
+            print("Type is {} and machine is {}".format(type, 3))
+            return 1 / 0
+
+    # Machine 4
+    for type in resource_types:
+        benchmark = 120
+        if type == "CPU-QUOTA":
+            benchmark = 200
+        if params[type][1] + params[type][5] + params[type][0] > benchmark:
+            print("Type is {} and machine is {}".format(type, 4))
+            return 1 / 0
 
 
 
     workload_config["type"] = "apt-app"
     masterNode = [master_node()]
-    experiment_trials = int(workload_config['num_trials']) if 'num_trials' in workload_config else 5
+    experiment_trials = int(workload_config['num_trials']) if 'num_trials' in workload_config else 1
     # service_names = ["node-app", "haproxy", "mongo"]
     service_names = ["elasticsearch", "kibana", "logstash", "mysql", "postgres", "node-apt-app", "haproxy"]
     dct = ip_to_service_list(service_names)
@@ -142,25 +177,25 @@ def explore_spearmint(workload_config, params):
     # params["MEMORY"] = 40
     # params["NET"] = 40
 
-    for mr in params:
-
-        for machine in dct:
-            sum = 0
-            for service in dct[machine]:
-
-               client = re.get_client(machine)
-               _, containers, _ = client.exec_command("docker ps | grep " + service + " | awk {'print $1'}")
-               containers = containers.read().split("\n")
-               if len(containers) > 1:
-                   containers = containers[:-1]
-               sum += params[mr][service_index_dct[service]] * len(containers)
-
-            threshold = 120
-            cpu_threshold = 200
-            toCompare = cpu_threshold if mr == "CPU-QUOTA" else threshold
-            if sum > toCompare:
-                print("Sum for {} is {}, which exceeds {}".format(mr, sum, toCompare))
-                return 1/0
+    # for mr in params:
+    #
+    #     for machine in dct:
+    #         sum = 0
+    #         for service in dct[machine]:
+    #
+    #            client = re.get_client(machine)
+    #            _, containers, _ = client.exec_command("docker ps | grep " + service + " | awk {'print $1'}")
+    #            containers = containers.read().split("\n")
+    #            if len(containers) > 1:
+    #                containers = containers[:-1]
+    #            sum += params[mr][service_index_dct[service]] * len(containers)
+    #
+    #         threshold = 120
+    #         cpu_threshold = 200
+    #         toCompare = cpu_threshold if mr == "CPU-QUOTA" else threshold
+    #         if sum > toCompare:
+    #             print("Sum for {} is {}, which exceeds {}".format(mr, sum, toCompare))
+    #             return 1/0
 
     for ip in dct:
         workload_config["request_generator"] = [ip]
@@ -209,7 +244,7 @@ def explore_spearmint(workload_config, params):
 
     # Write latency values to a csv, take the current time and then
     # subtract it from the time that the spearmint_runner was initiated
-    with open('/home/ubuntu/throttlebot/src/spearmint_results.csv','a') as csvfile:
+    with open('/Users/rahulbalakrishnan/Desktop/src/spearmint_results.csv','a') as csvfile:
         field_names = ['time', 'l0', 'l25', 'l50', 'l75', 'l90', 'l99', 'l100']
         for trial in range(len(experiment_results['l0'])):
             result_dict = {}

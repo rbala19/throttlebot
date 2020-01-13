@@ -73,6 +73,7 @@ def poll_for_best_result(queue, time_to_beat, process_to_terminate, duration, po
     result_list = []
 
     first = True
+    count = 0
     while time.time() - starting_time < duration:
 
         try:
@@ -95,13 +96,16 @@ def poll_for_best_result(queue, time_to_beat, process_to_terminate, duration, po
                 queue.put([value_to_add, trial])
                 result_list.append([value_to_add, trial])
 
-                with open("/Users/rahulbalakrishnan/Desktop/data/threshold/data_{}"
-                                  .format(date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
+                if count == 5:
+                    with open("/Users/rahulbalakrishnan/Desktop/data/threshold/data_{}"
+                                      .format(date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
 
-                    f.write(json.dumps({"results": result_list,
-                                        "polling_frequency": polling_frequency,
-                                        "duration": duration}))
-
+                        f.write(json.dumps({"results": result_list,
+                                            "polling_frequency": polling_frequency,
+                                            "duration": duration}))
+                    count = 0
+                else:
+                    count += 1
 
                 if first:
                     starting_time = current_time
