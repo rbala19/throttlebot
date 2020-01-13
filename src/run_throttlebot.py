@@ -759,7 +759,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                                                 sys_config, workload_config, filter_config, None, min_so_far)
 
 
-        directory = "/Users/rahulbalakrishnan/Desktop/data/experiments"
+        directory = "/home/ubuntu/data/experiments"
         most_recent_folder = sorted([os.path.join(directory, d) for d in os.listdir(directory) if not d.startswith('.')],
                                     key=os.path.getmtime)[-1]
 

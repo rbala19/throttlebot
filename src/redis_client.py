@@ -57,7 +57,7 @@ def write_redis_ranking(redis_db, experiment_iteration_count, perf_metric, mean_
     logging.info('SortedSetName: {}'.format(sorted_set_name))
 
     mr_key = generate_hash_key(experiment_iteration_count, mr, perf_metric)
-    redis_db.zadd(sorted_set_name, {mr_key: mean_result}, nx=True)
+    redis_db.zadd(sorted_set_name, mean_result, mr_key)
     logging.info("Length of ranking now is {}".format(len(redis_db.zrange(sorted_set_name, 0, -1, desc=False, withscores=True))))
 
 # Redis sets are ordered from lowest score to the highest score
@@ -95,7 +95,7 @@ def generate_ordered_filter_key(filter_name, exp_iteration):
 
 def write_filtered_results(redis_db, filter_type, exp_iteration, repr_string, exp_result): 
     sorted_set_name = generate_ordered_filter_key(filter_type, exp_iteration) 
-    redis_db.zadd(sorted_set_name, {repr_string: exp_result})
+    redis_db.zadd(sorted_set_name, exp_result, repr_string)
 
 # Redis sets are ordered from lowest score to the highest score
 # A metric where lower is better would have get_lowest parameter set to True
