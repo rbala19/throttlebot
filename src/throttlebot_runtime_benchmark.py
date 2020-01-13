@@ -13,7 +13,7 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
     for _ in range(num_iterations):
 
         date_time = datetime.now()
-        file_name = ("/home/ubuntu/data/experiments/tbotExperiment-{}".format(date_time.strftime("%m-%d-%Y-%H-%M-%S")))
+        file_name = ("/Users/rahulbalakrishnan/Desktop/data/experiments/tbotExperiment-{}".format(date_time.strftime("%m-%d-%Y-%H-%M-%S")))
         subprocess.Popen(shlex.split("mkdir {}".format(file_name)))
 
 
@@ -57,7 +57,7 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
                     result_list.append(data)
 
-                    with open("/home/ubuntu/data/tbot_threshold/{}"
+                    with open("/Users/rahulbalakrishnan/Desktop/data/tbot_threshold/{}"
                                       .format(date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
                         str_data = json.dumps({"results": result_list, "polling_frequency": polling_frequency,
                                                "duration": duration})
@@ -78,7 +78,7 @@ def run(num_iterations, time_to_beat, duration, polling_frequency):
 
     if num_iterations > 1:
         threshold_date_time = datetime.now()
-        with open("/home/ubuntu/data/tbot_threshold/cumulative-{}"
+        with open("/Users/rahulbalakrishnan/Desktop/data/tbot_threshold/cumulative-{}"
                           .format(threshold_date_time.strftime("%m-%d-%Y-%H-%M-%S")), "w") as f:
             str_data = json.dumps({"results": outer_result_list, "polling_frequency": polling_frequency, "duration": duration})
             f.write(str_data)

@@ -632,6 +632,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
     killer = GracefulKiller(redis_db)
 
     open('best_results', 'w').close()
+    open('individual_results.csv', 'w').close()
     min_so_far = None
 
     logging.getLogger("paramiko").setLevel(logging.WARNING)
@@ -758,7 +759,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                                                 sys_config, workload_config, filter_config, None, min_so_far)
 
 
-        directory = "/home/ubuntu/data/experiments"
+        directory = "/Users/rahulbalakrishnan/Desktop/data/experiments"
         most_recent_folder = sorted([os.path.join(directory, d) for d in os.listdir(directory) if not d.startswith('.')],
                                     key=os.path.getmtime)[-1]
 
@@ -950,7 +951,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         performance_improvement = simulated_mean - previous_mean
 
         with open('individual_results.csv','a') as csvfile:
-            field_names = ['iter', 'l0', 'l25', 'l50', 'l75', 'l90', 'l99', 'l100']
+            field_names = ['iter', 'l0', 'l25', 'l50', 'l75', 'l90', 'l99', 'l100', 'current_perf']
             for trial in range(len(original_simulated['l0'])):
                 result_dict = {}
                 result_dict['iter'] = experiment_count
@@ -961,6 +962,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                 result_dict['l90'] = original_simulated['l90'][trial]
                 result_dict['l99'] = original_simulated['l99'][trial]
                 result_dict['l100'] = original_simulated['l100'][trial]
+                result_dict['current_perf'] = improved_mean
                 writer = csv.DictWriter(csvfile, fieldnames=field_names)
                 writer.writerow(result_dict)
 
