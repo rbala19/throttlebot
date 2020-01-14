@@ -92,7 +92,7 @@ def parse_args():
                       type="string", default="")
     parser.add_option("--grid-size", dest="grid_size",
                       help="Number of experiments in initial grid.",
-                      type="int", default=20000)
+                      type="int", default=1000)
     parser.add_option("--grid-seed", dest="grid_seed",
                       help="The seed used to initialize initial grid.",
                       type="int", default=1)
@@ -248,9 +248,9 @@ def attempt_dispatch(expt_config, expt_dir, chooser, driver, options, first_time
     #     expt_grid.add_to_grid(candidate, add_to_end=False)
 
 
-    print("Status list is {}".format(expt_grid.status))
-    print("Grid is {}".format(expt_grid.grid))
-    print("Value list is {}".format(expt_grid.values))
+    # print("Status list is {}".format(expt_grid.status))
+    # print("Grid is {}".format(expt_grid.grid))
+    # print("Value list is {}".format(expt_grid.values))
 
     # Gets you everything - NaN for unknown values & durations.
     grid, values, durations = expt_grid.get_grid()

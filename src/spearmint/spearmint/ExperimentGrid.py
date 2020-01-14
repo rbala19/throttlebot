@@ -203,12 +203,94 @@ class ExperimentGrid:
         cmd = 'mv "%s" "%s"' % (fh.name, self.jobs_pkl)
         os.system(cmd) # TODO: Should check system-dependent return status.
 
-    def _hypercube_grid(self, dims, size):
-        # Generate from a sobol sequence
-        print("seed is {}".format(self.seed))
-        sobol_grid = np.transpose(i4_sobol_generate(dims,size,self.seed))
+    def check_constraints(self, all_constraints, constraints_satisfied, constraint_actual_sums, constraint_desired_sums,
+                          constraint_estimates, row):
+        for constraint_index in range(len(constraints_satisfied)):
+            if constraints_satisfied[constraint_index]:
+                continue
 
-        return sobol_grid
+            constraint = all_constraints[constraint_index]
+            sum = 0
+            for ind in constraint:
+                sum += row[ind]
+            if sum > 1:
+                constraint_actual_sums[constraint_index] = sum
+                constraint_estimates[constraint_index] = sum / constraint_desired_sums[constraint_index]
+            else:
+                constraints_satisfied[constraint_index] = True
+
+
+    def apply_constraint(self, all_constraints, constraint_actual_sums, constraint_desired_sums, index, row):
+        current_sum = constraint_actual_sums[index]
+        desired_sum = constraint_desired_sums[index]
+        constraint = all_constraints[index]
+
+        # print(row)
+        for i in constraint:
+
+            row[i] *= desired_sum / current_sum
+        # print(row)
+
+        sum = 0
+        for j in constraint:
+            sum += row[j]
+        # print("old sum was {} and new sum is {} and constraint index is {} and row is {}".format(current_sum, sum, index, row))
+
+
+    def _hypercube_grid(self, dims, size):
+
+        np.random.seed(self.seed)
+
+        # Generate from a sobol sequence
+        # print("seed is {}".format(self.seed))
+
+        # sobol_grid = np.transpose(i4_sobol_generate(dims,size,self.seed))
+
+
+        array = np.random.uniform(0, 1, [size, dims])
+
+        base_constraints = []
+        base_constraints.append([3, 1, 0])
+        base_constraints.append([1, 2, 0])
+        base_constraints.append([1, 6, 4])
+        base_constraints.append([1, 5, 0])
+
+        all_constraints = []
+
+        service_count = dims / 4
+
+        for i in range(0, 4):
+            for constraint in base_constraints:
+                all_constraints.append([c + i * service_count for c in constraint])
+
+        for row_index in range(len(array)):
+            # print(row_index)
+            row = array[row_index]
+
+            for i in range(service_count):
+                row[len(row) - 1 - i] /= 2
+
+            constraints_satisfied = np.repeat(False, len(all_constraints))
+            constraint_estimates = np.zeros(len(all_constraints))
+            constraint_desired_sums = np.repeat(.95, len(all_constraints))
+            constraint_actual_sums = np.zeros(len(all_constraints))
+
+            while not np.all(constraints_satisfied):
+                # print(constraints_satisfied)
+                self.check_constraints(all_constraints, constraints_satisfied, constraint_actual_sums,
+                                       constraint_desired_sums, constraint_estimates, row)
+
+                next_index = None
+                for index in range(len(constraints_satisfied)):
+                    if not constraints_satisfied[index]:
+                        next_index = index
+                        break
+
+                if next_index != None:
+                    self.apply_constraint(all_constraints, constraint_actual_sums, constraint_desired_sums, next_index, row)
+
+        print("Grid is generated")
+        return array
 
 class GridMap:
 

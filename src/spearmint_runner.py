@@ -17,6 +17,8 @@ def run(iterations, time_to_beat, duration, polling_frequency):
 
     open("/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint/bayOptSearch/best_results", "w").close()
 
+    open('/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint_results.csv', 'w').close()
+
 
     cumulative_results = []
 

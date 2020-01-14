@@ -125,7 +125,7 @@ def explore_spearmint(workload_config, params):
     for type in resource_types:
         benchmark = 120
         if type == "CPU-QUOTA":
-            benchmark = 200
+            benchmark = 120
         if params[type][3] + params[type][1] + params[type][0] > benchmark:
             print("Type is {} and machine is {}".format(type, 1))
             return 1/0
@@ -133,7 +133,7 @@ def explore_spearmint(workload_config, params):
     for type in resource_types:
         benchmark = 120
         if type == "CPU-QUOTA":
-            benchmark = 200
+            benchmark = 120
         if params[type][1] + params[type][0] + params[type][2] > benchmark:
             print("Type is {} and machine is {}".format(type, 2))
             return 1/0
@@ -141,7 +141,7 @@ def explore_spearmint(workload_config, params):
     for type in resource_types:
         benchmark = 120
         if type == "CPU-QUOTA":
-            benchmark = 200
+            benchmark = 120
         if params[type][1] + params[type][6] + params[type][4] > benchmark:
             print("Type is {} and machine is {}".format(type, 3))
             return 1 / 0
@@ -150,7 +150,7 @@ def explore_spearmint(workload_config, params):
     for type in resource_types:
         benchmark = 120
         if type == "CPU-QUOTA":
-            benchmark = 200
+            benchmark = 120
         if params[type][1] + params[type][5] + params[type][0] > benchmark:
             print("Type is {} and machine is {}".format(type, 4))
             return 1 / 0
@@ -212,7 +212,7 @@ def explore_spearmint(workload_config, params):
 
 
             for container in containers:
-                resource_modifier.set_cpu_quota(client, container, 250000, params["CPU-QUOTA"][service_index_dct[name]])
+                resource_modifier.set_cpu_quota(client, container, 250000, 2 * params["CPU-QUOTA"][service_index_dct[name]])
 
 
 
@@ -244,8 +244,8 @@ def explore_spearmint(workload_config, params):
 
     # Write latency values to a csv, take the current time and then
     # subtract it from the time that the spearmint_runner was initiated
-    with open('/Users/rahulbalakrishnan/Desktop/src/spearmint_results.csv','a') as csvfile:
-        field_names = ['time', 'l0', 'l25', 'l50', 'l75', 'l90', 'l99', 'l100']
+    with open('/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint_results.csv','a') as csvfile:
+        field_names = ['time', 'l0', 'l25', 'l50', 'l75', 'l90', 'l99', 'l100', 'performance']
         for trial in range(len(experiment_results['l0'])):
             result_dict = {}
             # To determine time elapsed, we will record the time at the start of the experiment
@@ -257,6 +257,7 @@ def explore_spearmint(workload_config, params):
             result_dict['l90'] = experiment_results['l90'][trial]
             result_dict['l99'] = experiment_results['l99'][trial]
             result_dict['l100'] = experiment_results['l100'][trial]
+            result_dict['performance'] = filter_policy.mean_list(experiment_results['latency_99'])
             writer = csv.DictWriter(csvfile, fieldnames=field_names)
             writer.writerow(result_dict)
 
@@ -264,7 +265,7 @@ def explore_spearmint(workload_config, params):
     mean_result = filter_policy.mean_list(experiment_results['latency_99'])
     std_result = np.std(np.array(experiment_results['latency_99']))
 
-    return mean_result, std_result
+    return mean_result
 
 
 
