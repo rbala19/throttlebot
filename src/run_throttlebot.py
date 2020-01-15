@@ -1432,6 +1432,7 @@ def filter_mr(mr_allocation, acceptable_resources, acceptable_services, acceptab
         if mr.service_name in get_quilt_services():
             delete_queue.append(mr)
         elif '*' not in acceptable_services and mr.service_name not in acceptable_services:
+            print("mr {} is not in acceptable services".format(mr))
             delete_queue.append(mr)
         # Cannot have both CPU and Quota Stressing
         # Default to using quota
