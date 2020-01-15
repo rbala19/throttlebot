@@ -245,18 +245,14 @@ def explore_spearmint(workload_config, params):
     # Write latency values to a csv, take the current time and then
     # subtract it from the time that the spearmint_runner was initiated
     with open('/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint_results.csv','a') as csvfile:
-        field_names = ['time', 'l0', 'l25', 'l50', 'l75', 'l90', 'l99', 'l100', 'performance']
+        field_names = ['time', "latency_50", "latency_90", "latency_99", "performance"]
         for trial in range(len(experiment_results['l0'])):
             result_dict = {}
             # To determine time elapsed, we will record the time at the start of the experiment
             result_dict['time'] = datetime.datetime.now()
-            result_dict['l0'] = experiment_results['l0'][trial]
-            result_dict['l25'] = experiment_results['l25'][trial]
-            result_dict['l50'] = experiment_results['l50'][trial]
-            result_dict['l75'] = experiment_results['l75'][trial]
-            result_dict['l90'] = experiment_results['l90'][trial]
-            result_dict['l99'] = experiment_results['l99'][trial]
-            result_dict['l100'] = experiment_results['l100'][trial]
+            result_dict['latency_50'] = filter_policy.mean_list(experiment_results['latency_50'])
+            result_dict['latency_90'] = filter_policy.mean_list(experiment_results['latency_90'])
+            result_dict['latency_99'] = filter_policy.mean_list(experiment_results['latency_99'])
             result_dict['performance'] = filter_policy.mean_list(experiment_results['latency_99'])
             writer = csv.DictWriter(csvfile, fieldnames=field_names)
             writer.writerow(result_dict)
