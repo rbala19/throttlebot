@@ -1309,27 +1309,27 @@ def install_dependencies(workload_config):
     traffic_machines = workload_config['request_generator']
     if traffic_machines == ['']:
         return
-    for traffic_machine in traffic_machines:
-        print("creating client")
-        traffic_client = get_client(traffic_machine)
-        ssh_exec(traffic_client, 'sudo apt-get install apache2-utils -y')
-        if workload_config['type'] == 'todo-app':
-            ssh_exec(traffic_client, 'curl -O https://raw.githubusercontent.com/TsaiAnson/mean-a/master/Master%20Node%20Files/clear_entries.py')
-            ssh_exec(traffic_client, 'curl -O https://raw.githubusercontent.com/TsaiAnson/mean-a/master/Master%20Node%20Files/post.json')
-        close_client(traffic_client)
-
-    # Hardcoded for apt-app, initializing databases
-    if workload_config['type'] == 'apt-app':
-        # if len(traffic_machines) != 6:
-        #     logging.info('Not enough traffic machines supplied. Please check config file. Exiting...')
-        #     exit()
-        # for traffic_machine in traffic_machines:
-        #     traffic_client = get_client(traffic_machine)
-        #     ssh_exec(traffic_client, 'touch post.json')
-        #     close_client(traffic_client)
-        traffic_client = get_client(traffic_machines[0])
-        ssh_exec(traffic_client, 'touch post.json')
-        close_client(traffic_client)
+    # for traffic_machine in traffic_machines:
+    #     print("creating client")
+    #     traffic_client = get_client(traffic_machine)
+    #     ssh_exec(traffic_client, 'sudo apt-get install apache2-utils -y')
+    #     if workload_config['type'] == 'todo-app':
+    #         ssh_exec(traffic_client, 'curl -O https://raw.githubusercontent.com/TsaiAnson/mean-a/master/Master%20Node%20Files/clear_entries.py')
+    #         ssh_exec(traffic_client, 'curl -O https://raw.githubusercontent.com/TsaiAnson/mean-a/master/Master%20Node%20Files/post.json')
+    #     close_client(traffic_client)
+    #
+    # # Hardcoded for apt-app, initializing databases
+    # if workload_config['type'] == 'apt-app':
+    #     # if len(traffic_machines) != 6:
+    #     #     logging.info('Not enough traffic machines supplied. Please check config file. Exiting...')
+    #     #     exit()
+    #     # for traffic_machine in traffic_machines:
+    #     #     traffic_client = get_client(traffic_machine)
+    #     #     ssh_exec(traffic_client, 'touch post.json')
+    #     #     close_client(traffic_client)
+    #     traffic_client = get_client(traffic_machines[0])
+    #     ssh_exec(traffic_client, 'touch post.json')
+    #     close_client(traffic_client)
 
 # Filter out resources, services, and machines that shouldn't be stressed on this iteration
 # Automatically Filter out Quilt-specific modules
