@@ -29,6 +29,7 @@ from filter_policy import *
 from poll_cluster_state import *
 from instance_specs import *
 from mr	import MR
+import shlex
 
 import redis.client
 import redis_client as tbot_datastore
@@ -44,7 +45,7 @@ Signal Handler
 '''
 class GracefulKiller:
     redis_db = None
-    
+
     def __init__(self, redis_db):
         self.redis_db = redis_db
         signal.signal(signal.SIGINT, self.exit_gracefully)
@@ -366,7 +367,7 @@ def create_decrease_nimr_schedule(redis_db, imr, nimr_list, stress_weight, targe
     assert new_vm_removal == min_vm_removal
     nimr_reduction = new_nimr_reduction
     min_vm_removal = new_vm_removal
-            
+
     machine_to_imr = containers_per_vm(imr)
     max_imr_containers = max([machine_to_imr[machine_ip] for machine_ip in machine_to_imr])
     proposed_imr_improvement = abs(min_vm_removal) / max_imr_containers
@@ -384,7 +385,7 @@ def determine_reallocation(redis_db, colocated_nimr_list, vm_to_nimr, imr,
     for deployment in imr.instances:
         vm_ip,_ = deployment
         vm_to_removal[vm_ip] = 0
-        
+
     min_vm_removal = 0
     nimr_reduction = {}
     for nimr in colocated_nimr_list:
@@ -596,7 +597,7 @@ default_mr_config: Filtered MRs that should be stress along with their default a
 '''
 
 def run(sys_config, workload_config, filter_config, default_mr_config,
-        last_completed_iter=0, fake=False, run_one_iteration=False):
+        last_completed_iter=0, fake=False, run_one_iteration=False, time_to_beat = -100):
     redis_host = sys_config['redis_host']
     baseline_trials = sys_config['baseline_trials']
     experiment_trials = sys_config['trials']
@@ -616,6 +617,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
     num_iterations = sys_config['num_iterations']
     error_tolerance = sys_config['error_tolerance']
 
+    # tsaianson / node - apt - app, library / postgres:9.4, kibana:4, mysql:5.6
+    # .32, elasticsearch:2.4, haproxy:1.7, hantaowang / logstash - postgres
+
     preferred_performance_metric = workload_config['tbot_metric']
     optimize_for_lowest = workload_config['optimize_for_lowest']
 
@@ -627,12 +631,23 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
 
     killer = GracefulKiller(redis_db)
 
+    open('best_results', 'w').close()
+    open('individual_results.csv', 'w').close()
+    min_so_far = None
+
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
     logging.info('\n' * 2)
     logging.info('*' * 20)
     logging.info('INITIALIZING RESOURCE CONFIG')
     # Initialize Redis and Cluster based on the default resource configuration
     init_cluster_capacities_r(redis_db, machine_type, quilt_overhead)
     init_service_placement_r(redis_db, default_mr_config)
+
+    # logging.info(default_mr_config)
+    # print(default_mr_config)
+    # with open("default_mr_config", "w") as f:
+    #     f.write(json.dumps(default_mr_config))
+
     init_resource_config(redis_db, default_mr_config, machine_type, workload_config)
 
     # In the on-prem mode, fill out resources
@@ -659,6 +674,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
 
     # Initialize time for data charts
     time_start = datetime.datetime.now()
+    time_start_secs = time.time()
 
     logging.info('*' * 20)
     logging.info('RUNNING BASELINE')
@@ -668,9 +684,19 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                                            baseline_trials,
                                            workload_config['include_warmup'])
 
+
+
+
     current_performance[preferred_performance_metric] = remove_outlier(current_performance[preferred_performance_metric])
     baseline_performance = current_performance[preferred_performance_metric]
-    
+    baseline_mean = mean_list(baseline_performance)
+
+    min_so_far = baseline_mean
+    now = time.time()
+    with open("best_results", "a") as f:
+        f.write("Beat Time-to-beat with these stats: {}\n".format([baseline_mean, -1,
+                                                                   now - time_start_secs]))
+
     # If fake, then return only baseline
     if fake:
     	return baseline_performance
@@ -688,7 +714,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                                            {},
                                            mean_list(current_performance[preferred_performance_metric]),
                                            mean_list(current_performance[preferred_performance_metric]),
-                                           time_delta.seconds, 0)
+                                           np.std(np.array(current_performance[preferred_performance_metric])), 
+                                           time_delta.seconds, 0,
+                                           all_results=current_performance[preferred_performance_metric])
 
     logging.info('============================================')
     logging.info('\n' * 2)
@@ -704,7 +732,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
 
     if nimr_squeeze_only:
         num_iterations = 2
-        
+
+
+
     # Modified while condition for completion
     while experiment_count < num_iterations:
         # Calculate the analytic baseline that is used to determine MRs
@@ -725,8 +755,13 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         analytic_baseline[preferred_performance_metric] = remove_outlier(analytic_baseline[preferred_performance_metric])
 
         # Get a list of MRs to stress in the form of a list of MRs
-        mr_to_consider = apply_filtering_policy(redis_db, mr_working_set, experiment_count,
-                                                sys_config, workload_config, filter_config)
+        mr_to_consider,min_so_far = apply_filtering_policy(redis_db, mr_working_set, experiment_count,
+                                                sys_config, workload_config, filter_config, None, min_so_far)
+
+
+        directory = "/home/ubuntu/data/experiments"
+        most_recent_folder = sorted([os.path.join(directory, d) for d in os.listdir(directory) if not d.startswith('.')],
+                                    key=os.path.getmtime)[-1]
 
         for mr in mr_to_consider:
             logging.info('\n' * 2)
@@ -746,7 +781,23 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             experiment_results = measure_runtime(workload_config, experiment_trials)
 
             preferred_results = experiment_results[preferred_performance_metric]
+            logging.info("Results are {}".format(preferred_results))
             mean_result = mean_list(preferred_results)
+
+            with open(os.path.join(most_recent_folder, "logger-iteration{}".format(experiment_count)), 'a') as f:
+                f.write("{}:{} = {}\n".format(mr.to_string(), current_mr_allocation, mean_result))
+
+            # if mean_result < min_so_far and mean_result:
+            #     logging.info("Mean result is {}".format(mean_result))
+            #     logging.info("time to beat is {}".format(time_to_beat))
+            #     min_so_far = mean_result
+            #     now = time.time()
+            #     with open("best_results", "a") as f:
+            #         f.write("Beat Time-to-beat with these stats: {}\n".format([mean_result, experiment_count,
+            #                                                            now - time_start_secs]))
+
+
+
             tbot_datastore.write_redis_ranking(redis_db, experiment_count,
                                                preferred_performance_metric,
                                                mean_result, mr, stress_weight)
@@ -866,8 +917,10 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             # Change MR provisions without committing the actions
             simulate_mr_provisions(redis_db, current_mimr, imr_improvement_proposal, nimr_diff_proposal)
             simulated_performance = measure_runtime(workload_config, baseline_trials)
+            original_simulated = deepcopy(simulated_performance)
             simulated_performance[preferred_performance_metric] = remove_outlier(simulated_performance[preferred_performance_metric])
             simulated_mean = mean_list(simulated_performance[preferred_performance_metric])
+            simulated_std = np.std(np.array(simulated_performance[preferred_performance_metric]))
 
             current_perf_mean = mean_list(current_performance[preferred_performance_metric])
             is_perf_improved = is_performance_improved(current_perf_mean, simulated_mean, optimize_for_lowest, within_x=error_tolerance)
@@ -893,16 +946,44 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         # Test the new performance after potential resource stealing
         improved_performance = simulated_performance
         improved_mean = simulated_mean
+        improved_std = simulated_std
         previous_mean = mean_list(current_performance[preferred_performance_metric])
         performance_improvement = simulated_mean - previous_mean
+
+        with open('individual_results.csv','a') as csvfile:
+            field_names = ['iter', 'latency_50', 'latency_90', 'latency_99','current_perf']
+            for trial in range(len(original_simulated['latency_99'])):
+                result_dict = {}
+                result_dict['iter'] = experiment_count
+                result_dict['latency_50'] = original_simulated["latency_50"]
+                result_dict['latency_90'] = original_simulated["latency_90"]
+                result_dict['latency_99'] = original_simulated["latency_99"]
+                result_dict['current_perf'] = improved_mean
+                writer = csv.DictWriter(csvfile, fieldnames=field_names)
+                writer.writerow(result_dict)
 
         # Write a summary of the experiment's iterations to Redis
         tbot_datastore.write_summary_redis(redis_db, experiment_count, effective_mimr,
                                            performance_improvement, action_taken,
-                                           analytic_mean, improved_mean,
-                                           time_delta.seconds, cumulative_mr_count)
+                                           analytic_mean, improved_mean, improved_std,
+                                           time_delta.seconds, cumulative_mr_count,
+                                           all_results=simulated_performance[preferred_performance_metric])
 
         current_performance = improved_performance
+
+        with open(os.path.join(most_recent_folder, "logger-iteration{}".format(experiment_count)), 'a') as f:
+            f.write("Final result of iteration is {}".format(current_performance))
+
+        if improved_mean < min_so_far and improved_mean:
+            logging.info("Mean result is {}".format(improved_mean))
+            min_so_far = improved_mean
+            logging.info("time to beat is {}".format(time_to_beat))
+            now = time.time()
+            with open("best_results", "a") as f:
+                f.write("Beat Time-to-beat with these stats: {}\n".format([improved_mean, experiment_count,
+                                                                           now - time_start_secs]))
+
+
 
         # Generating overall performance improvement
         chart_generator.get_summary_performance_charts(redis_db, workload_config, experiment_count, time_start)
@@ -913,6 +994,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         # Checkpoint MR configurations and print
         current_mr_config = resource_datastore.read_all_mr_alloc(redis_db)
         print_csv_configuration(current_mr_config)
+
+
+        print_csv_configuration(current_mr_config, os.path.join(most_recent_folder, "tuned_config-{}.csv".format(experiment_count)))
         experiment_count += 1
 
         # Potentially adapt step size if no performance gains observed
@@ -923,7 +1007,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
             baseline_trials += 5
             sys_config['baseline_trials'] = baseline_trials
             sys_config['trials'] = experiment_trials
-            
+
             logging.info('Net performance improvement reported as 0, so initiating a backtrack step')
             new_performance = backtrack_overstep(redis_db,
                                                  workload_config,
@@ -938,6 +1022,9 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
                 # Checkpoint MR configurations and print
                 current_mr_config = resource_datastore.read_all_mr_alloc(redis_db)
                 print_csv_configuration(current_mr_config)
+                date_time = datetime.datetime.now()
+                print_csv_configuration(current_mr_config, os.path.join(most_recent_folder, "tuned_config-{}.csv".format(
+                    date_time.strftime("%m-%d-%Y-%H-%M-%S"))))
                 experiment_count += 1
 
                 logging.info('Backtrack completed, referred to as experiment {}'.format(experiment_count))
@@ -960,6 +1047,7 @@ def run(sys_config, workload_config, filter_config, default_mr_config,
         logging.info('{} = {}'.format(mr.to_string(), current_mr_config[mr]))
 
     print_csv_configuration(current_mr_config)
+
 
 def is_baseline_constant(mr_working_set,
                          workload_config,
@@ -1042,7 +1130,7 @@ def squeeze_nimrs(redis_db, sys_config,
         if valid_change is False:
             if valid_change_amount == 0:
                 continue
-            
+
         new_alloc = current_nimr_alloc + valid_change_amount
         set_mr_provision_detect_id_change(redis_db, nimr, new_alloc, None)
 
@@ -1094,8 +1182,9 @@ def backtrack_overstep(redis_db, workload_config, experiment_count,
         median_alloc_perf = measure_runtime(workload_config, experiment_count)
         if len(median_alloc_perf[metric]) == 0:
             return None
-        
+
         median_alloc_mean = mean_list(median_alloc_perf[metric])
+        median_alloc_std = np.std(np.array(median_alloc_perf[metric]))
 
 
         # If the median alloc performance is better, rewind the improvement back to this point
@@ -1108,8 +1197,8 @@ def backtrack_overstep(redis_db, workload_config, experiment_count,
             new_action[mr] = median_alloc - new_mr_alloc
             tbot_datastore.write_summary_redis(redis_db, experiment_count, mr,
                                                perf_improvement, new_action,
-                                               median_alloc_mean, median_alloc_mean,
-                                               0, 0, is_backtrack=True)
+                                               median_alloc_mean, median_alloc_mean, median_alloc_std, 
+                                               0, 0, is_backtrack=True, all_results=median_alloc_perf[metric])
 
             results = tbot_datastore.read_summary_redis(redis_db, experiment_count)
             logging.info('Results from backtrack are {}'.format(results))
@@ -1419,7 +1508,7 @@ def fake_run(config_file, mr_allocation):
     workload_config['frontend'] = [services['haproxy:1.7'][0][0]]
     print "Retrieving frontend:", workload_config['frontend']
     print "Retrieving request_generator:", workload_config['request_generator']
-    
+
     r = run(sys_config, workload_config, filter_config, mr_allocation, 0, fake=True)
     return r
 
@@ -1429,6 +1518,7 @@ if __name__ == "__main__":
     parser.add_argument("--resource_config", help='Default Resource Allocation for Throttlebot')
     parser.add_argument("--last_completed_iter", type=int, default=0, help="Last iteration completed")
     parser.add_argument("--log", help='Default Logging File')
+    parser.add_argument("--time_to_beat", type=int, default = -100, help="terminates after latency drops below time to beat")
     args = parser.parse_args()
 
     # Setup Logging
@@ -1463,15 +1553,15 @@ if __name__ == "__main__":
         logging.info(workload_config)
     elif workload_config['type'] == 'apt-app':
         all_vm_ip = get_actual_vms()
-        workload_config['request_generator'] = [get_master()]        
+        workload_config['request_generator'] = [get_master()]
         services = get_service_placements(all_vm_ip)
         workload_config['frontend'] = [services['haproxy:1.7'][0][0]]
         print "Retrieving frontend:", workload_config['frontend']
         print "Retrieving request_generator:", workload_config['request_generator']
- 
+
     experiment_start = time.time()
-    
-    run(sys_config, workload_config, filter_config, mr_allocation, args.last_completed_iter)
+
+    run(sys_config, workload_config, filter_config, mr_allocation, args.last_completed_iter, time_to_beat=args.time_to_beat)
     experiment_end = time.time()
 
     # Record the time and the number of MRs visited
