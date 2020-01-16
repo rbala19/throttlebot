@@ -7,5 +7,5 @@ tbot_metric = latency_99
 optimize_for_lowest = True
 performance_target = 10
 include_warmup = False
-workload_num = 3
-machine_type = c4.large
+workload_num = 1
+machine_type = m4.large

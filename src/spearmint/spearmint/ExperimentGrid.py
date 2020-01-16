@@ -249,11 +249,8 @@ class ExperimentGrid:
 
         array = np.random.uniform(0, 1, [size, dims])
 
-        base_constraints = []
-        base_constraints.append([3, 1, 0])
-        base_constraints.append([1, 2, 0])
-        base_constraints.append([1, 6, 4])
-        base_constraints.append([1, 5, 0])
+        base_constraints = [[10, 9, 8], [0, 5], [6, 8], [4, 5], [7, 0], [2, 8, 1], [6, 7, 1],
+                        [0, 3, 7], [5, 6]]
 
         all_constraints = []
 

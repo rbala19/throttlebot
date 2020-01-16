@@ -975,11 +975,6 @@ def measure_hotrod(workload_config, experiment_iterations,
         logging.info(all_requests)
         print all_requests
 
-    all_requests['rps'] = [np.median(all_requests['rps'])]
-    all_requests['latency'] = [np.median(all_requests['latency'])]
-    all_requests['latency_50'] = [np.median(all_requests['latency_50'])]
-    all_requests['latency_90'] = [np.median(all_requests['latency_90'])]
-    all_requests['latency_99'] = [np.median(all_requests['latency_99'])]
     return all_requests
 
 if __name__ == '__main__':

@@ -31,7 +31,7 @@ def unpack_args(str):
     else:
         return {}
 
-def slice_sample(init_x, logprob, sigma=1.0, step_out=True, max_steps_out=1000, 
+def slice_sample(init_x, logprob, sigma=1, step_out=True, max_steps_out=1000,
                  compwise=False, verbose=False):
     def direction_slice(direction, init_x):
         def dir_logprob(z):

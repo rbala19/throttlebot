@@ -4,7 +4,7 @@ name: "bayOpt"
 variable {
     name: "DISK"
     type: INT
-    size: 7
+    size: 11
     min: 10
     max: 100
 }
@@ -12,7 +12,7 @@ variable {
 variable {
     name: "MEMORY"
     type: INT
-    size: 7
+    size: 11
     min: 10
     max: 100
 }
@@ -20,7 +20,7 @@ variable {
 variable {
     name: "NET"
     type: INT
-    size: 7
+    size: 11
     min: 10
     max: 100
 }
@@ -29,7 +29,7 @@ variable {
 variable {
     name: "CPU-QUOTA"
     type: INT
-    size: 7
+    size: 11
     min: 10
     max: 100
 }

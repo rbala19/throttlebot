@@ -32,7 +32,7 @@ def run(iterations, time_to_beat, duration, polling_frequency):
 
         queue = mp.Queue()
 
-        cmd = "python2.7 ./spearmint/spearmint/main.py --driver=local --method=GPEIOptChooser " + \
+        cmd = "python2 ./spearmint/spearmint/main.py --driver=local --method=GPEIOptChooser " + \
               "--method-args=noiseless=1 --data-file=test.csv /Users/rahulbalakrishnan/Desktop/" + \
               "throttlebot/src/spearmint/bayOptSearch/bayOpt.pb"
 

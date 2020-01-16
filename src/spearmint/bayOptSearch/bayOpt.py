@@ -62,6 +62,10 @@ def ip_to_service_list(service_names):
 
             if service in service_name:
                 services_matched.append(service)
+
+        if not services_matched:
+            # print(service_name)
+            continue
         earliest_service = min(services_matched, key=service_name.index)
         machines_to_services[machine].append(earliest_service)
 
@@ -74,6 +78,7 @@ def ip_to_service_list(service_names):
 
     print(ip_to_services)
     return ip_to_services
+
 
 def master_node():
     mn = str(subprocess.check_output("quilt ps | grep Master | awk {\'print $6\'}", shell=True).decode("utf-8"))[:-1]
@@ -109,6 +114,8 @@ def main(job_id, params):
 
 def explore_spearmint(workload_config, params):
 
+    # return np.random.uniform(0, 15)
+
     redis_db = redis.StrictRedis(host='0.0.0.0', port=6379, db=0)
 
 
@@ -119,49 +126,31 @@ def explore_spearmint(workload_config, params):
     # Set all fields using params object
 
 
+    machine_list = [[10, 9, 8], [0, 5], [6, 8], [4, 5], [7, 0], [2, 8, 1], [6, 7, 1],
+                    [0, 3, 7], [5, 6]]
+
     #hardcoded checks
     resource_types = ["CPU-QUOTA", "MEMORY", "NET", "DISK"]
     #Machine 1
     for type in resource_types:
         benchmark = 120
-        if type == "CPU-QUOTA":
-            benchmark = 120
-        if params[type][3] + params[type][1] + params[type][0] > benchmark:
-            print("Type is {} and machine is {}".format(type, 1))
-            return 1/0
-    #Machine 2
-    for type in resource_types:
-        benchmark = 120
-        if type == "CPU-QUOTA":
-            benchmark = 120
-        if params[type][1] + params[type][0] + params[type][2] > benchmark:
-            print("Type is {} and machine is {}".format(type, 2))
-            return 1/0
-    #Machine 3
-    for type in resource_types:
-        benchmark = 120
-        if type == "CPU-QUOTA":
-            benchmark = 120
-        if params[type][1] + params[type][6] + params[type][4] > benchmark:
-            print("Type is {} and machine is {}".format(type, 3))
-            return 1 / 0
-
-    # Machine 4
-    for type in resource_types:
-        benchmark = 120
-        if type == "CPU-QUOTA":
-            benchmark = 120
-        if params[type][1] + params[type][5] + params[type][0] > benchmark:
-            print("Type is {} and machine is {}".format(type, 4))
-            return 1 / 0
+        for item in machine_list:
+            sum = 0
+            for index in item:
+                sum += params[type][index]
+            if sum > benchmark:
+                print("Type is {} and machine is {}".format(type, item))
+                return 1/0
 
 
 
-    workload_config["type"] = "apt-app"
-    masterNode = [master_node()]
-    experiment_trials = int(workload_config['num_trials']) if 'num_trials' in workload_config else 1
+
+    workload_config["type"] = "hotrod"
+    workload_config["workload_num"] = 1
+    masterNode = ["54.215.210.18"]
+    experiment_trials = int(workload_config['num_trials']) if 'num_trials' in workload_config else 5
     # service_names = ["node-app", "haproxy", "mongo"]
-    service_names = ["elasticsearch", "kibana", "logstash", "mysql", "postgres", "node-apt-app", "haproxy"]
+    service_names =["hantaowang/hotrod-mapper:log","haproxy:1.7","hantaowang/hotrod-mapper:log","postgres:9.4","hantaowang/hotrod-seed","hantaowang/hotrod-customer:log","hantaowang/hotrod-route:log","hantaowang/hotrod-api:log","hantaowang/hotrod-driver:log","hantaowang/hotrod-frontend","nginx:1.7.9","hantaowang/redis"]
     dct = ip_to_service_list(service_names)
     for ip in dct:
         if "haproxy" in dct[ip]:
@@ -169,8 +158,12 @@ def explore_spearmint(workload_config, params):
             break
 
     # service_index_dct = {"node-app": 0, "haproxy": 1, "mongo": 2}
-    service_index_dct = {"node-apt-app": 0, "kibana": 1, "elasticsearch": 2, "logstash": 3, "mysql":4,
-                         "haproxy": 5, "postgres":6}
+    service_index_dct = {"hantaowang/hotrod-mapper:log": 0,"haproxy:1.7": 1, "hantaowang/redis": 2,
+                         "postgres:9.4": 3,
+                         "hantaowang/hotrod-seed": 4,"hantaowang/hotrod-customer:log": 5,
+                         "hantaowang/hotrod-route:log": 6,"hantaowang/hotrod-api:log": 7,
+                         "hantaowang/hotrod-driver:log": 8,"hantaowang/hotrod-frontend": 9,
+                         "nginx:1.7.9": 10}
 
     # params["CPU-QUOTA"] = [40, 40, 40]
     # params["DISK"] = []
@@ -208,11 +201,13 @@ def explore_spearmint(workload_config, params):
             if len(containers) > 1:
                 containers = containers[:-1]
 
+            print("{} for {} in ip {}".format(containers, name, ip))
+
             instances = [(str(workload_config["request_generator"][0]), container) for container in containers]
 
 
             for container in containers:
-                resource_modifier.set_cpu_quota(client, container, 250000, 2 * params["CPU-QUOTA"][service_index_dct[name]])
+                resource_modifier.set_cpu_quota(client, container, 250000, instance_specs.get_instance_specs(workload_config["machine_type"])["CPU-CORE"] * params["CPU-QUOTA"][service_index_dct[name]])
 
 
 
@@ -246,14 +241,14 @@ def explore_spearmint(workload_config, params):
     # subtract it from the time that the spearmint_runner was initiated
     with open('/Users/rahulbalakrishnan/Desktop/throttlebot/src/spearmint_results.csv','a') as csvfile:
         field_names = ['time', "latency_50", "latency_90", "latency_99", "performance"]
-        for trial in range(len(experiment_results['l0'])):
+        for trial in range(len(experiment_results['latency_99'])):
             result_dict = {}
             # To determine time elapsed, we will record the time at the start of the experiment
             result_dict['time'] = datetime.datetime.now()
             result_dict['latency_50'] = filter_policy.mean_list(experiment_results['latency_50'])
             result_dict['latency_90'] = filter_policy.mean_list(experiment_results['latency_90'])
             result_dict['latency_99'] = filter_policy.mean_list(experiment_results['latency_99'])
-            result_dict['performance'] = filter_policy.mean_list(experiment_results['latency_99'])
+            result_dict['performance'] = experiment_results['latency_99']
             writer = csv.DictWriter(csvfile, fieldnames=field_names)
             writer.writerow(result_dict)
 

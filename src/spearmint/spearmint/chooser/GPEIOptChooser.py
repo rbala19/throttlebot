@@ -71,7 +71,7 @@ class GPEIOptChooser:
         self.hyper_iters     = 1        
         # Number of points to optimize EI over
         self.grid_subset     = int(grid_subset)
-        self.noiseless       = bool(int(noiseless))
+        self.noiseless       = True
         self.hyper_samples = []
 
         self.noise_scale = 0.1  # horseshoe prior
